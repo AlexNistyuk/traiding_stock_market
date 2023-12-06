@@ -10,4 +10,4 @@ COPY Pipfile.lock /stock_market
 
 RUN pipenv sync --system
 
-COPY . /stock_market
+COPY . .

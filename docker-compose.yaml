@@ -4,7 +4,8 @@ services:
     image: stock_market
     ports:
       - "${WEB_PORT}:8000"
-    command: ["/stock_market/entrypoint.sh"]
+    entrypoint:
+      - /stock_market/entrypoint.sh
     depends_on:
       - postgres
 
