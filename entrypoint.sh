@@ -1,3 +1,5 @@
 #!/bin/bash
 
-python3 /stock_market/stock_market/manage.py runserver 0.0.0.0:8000
+cd /stock_market/stock_market/
+
+python3 manage.py runserver 0.0.0.0:8000
