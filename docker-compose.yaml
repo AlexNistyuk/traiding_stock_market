@@ -1,0 +1,16 @@
+version: "4.0"
+services:
+  django_app:
+    image: stock_market
+    ports:
+      - "${WEB_PORT}:8000"
+    command: ["/stock_market/entrypoint.sh"]
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:alpine
+    env_file:
+      - .env
+    ports:
+      - "${POSTGRES_PORT}:5432"
