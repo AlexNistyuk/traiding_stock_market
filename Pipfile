@@ -6,9 +6,9 @@ name = "pypi"
 [packages]
 django = "*"
 djangorestframework = "*"
-python-dotenv = "*"
 pyjwt = "*"
 pre-commit = "*"
+django-environ = "*"
 
 [dev-packages]
 
