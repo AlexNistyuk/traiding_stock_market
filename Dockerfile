@@ -11,3 +11,5 @@ COPY Pipfile.lock /stock_market
 RUN pipenv sync --system
 
 COPY . .
+
+WORKDIR /stock_market/stock_market

@@ -3,7 +3,9 @@ services:
   django_app:
     image: stock_market
     ports:
-      - "${WEB_PORT}:8000"
+      - "${WEB_PORT}:${WEB_PORT}"
+    env_file:
+      - .env
     entrypoint:
       - /stock_market/entrypoint.sh
     depends_on:
