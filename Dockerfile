@@ -5,11 +5,9 @@ WORKDIR /stock_market
 
 RUN pip3 install pipenv
 
-COPY Pipfile /stock_market
-COPY Pipfile.lock /stock_market
+COPY Pipfile .
+COPY Pipfile.lock .
 
 RUN pipenv sync --system
 
 COPY . .
-
-WORKDIR /stock_market/stock_market
