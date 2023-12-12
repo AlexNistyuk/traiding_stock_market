@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class BrokersConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'brokers'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "brokers"
