@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -60,12 +61,12 @@ class User(AbstractBaseUser):
     password = models.CharField(null=False, max_length=128)
     role = models.CharField(choices=Roles.choices, default=Roles.USER, null=False)
     image = models.ImageField(upload_to="avatars/", blank=True)
-    is_reset_password = models.BooleanField(default=False)
     is_blocked = models.BooleanField(default=False)
     balance = models.DecimalField(
         max_digits=settings.DECIMAL_MAX_DIGITS,
         decimal_places=settings.DECIMAL_PLACES,
         default=Decimal("0"),
+        validators=[MinValueValidator(Decimal("0"))],
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
