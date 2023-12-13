@@ -61,7 +61,6 @@ class User(AbstractBaseUser):
     password = models.CharField(null=False, max_length=128)
     role = models.CharField(choices=Roles.choices, default=Roles.USER, null=False)
     image = models.ImageField(upload_to="avatars/", blank=True)
-    is_reset_password = models.BooleanField(default=False)
     is_blocked = models.BooleanField(default=False)
     balance = models.DecimalField(
         max_digits=settings.DECIMAL_MAX_DIGITS,

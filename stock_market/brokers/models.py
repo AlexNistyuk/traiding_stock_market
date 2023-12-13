@@ -141,3 +141,15 @@ class Trade(models.Model):
                 check=models.Q(price__gte=Decimal("0")), name="trade_price_non_negative"
             ),
         ]
+
+
+class Recommendation(models.Model):
+    counter = models.IntegerField(default=0)
+    investment = models.OneToOneField(
+        "Investment", on_delete=models.CASCADE, db_index=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "recommendation"
