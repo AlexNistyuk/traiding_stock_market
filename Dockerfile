@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM python:3.11.7-slim-bookworm
 
 RUN mkdir /stock_market
 WORKDIR /stock_market
@@ -11,3 +11,5 @@ COPY Pipfile.lock .
 RUN pipenv sync --system
 
 COPY . .
+
+RUN chmod +x entrypoint.sh
