@@ -8,7 +8,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = "__all__"
         write_only_fields = ("password",)
         read_only_fields = (
-            "is_reset_password",
             "is_blocked",
             "role",
             "created_at",
@@ -22,7 +21,6 @@ class UserDetailSerializer(serializers.ModelSerializer):
         model = User
         exclude = ("password",)
         read_only_fields = (
-            "is_reset_password",
             "email",
             "username",
             "role",
