@@ -1,5 +1,11 @@
-from brokers.models import (Investment, InvestmentPortfolio, LimitOrder,
-                            MarketOrder, Trade)
+from brokers.models import (
+    Investment,
+    InvestmentPortfolio,
+    LimitOrder,
+    MarketOrder,
+    Recommendation,
+    Trade,
+)
 from rest_framework import serializers
 
 
@@ -30,4 +36,10 @@ class InvestmentPortfolioSerializer(serializers.ModelSerializer):
 class TradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trade
+        fields = "__all__"
+
+
+class RecommendationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recommendation
         fields = "__all__"
