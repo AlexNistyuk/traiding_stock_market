@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -66,6 +67,7 @@ class User(AbstractBaseUser):
         max_digits=settings.DECIMAL_MAX_DIGITS,
         decimal_places=settings.DECIMAL_PLACES,
         default=Decimal("0"),
+        validators=[MinValueValidator(Decimal("0"))],
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

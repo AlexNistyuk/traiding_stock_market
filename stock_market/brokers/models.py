@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -31,6 +32,7 @@ class Investment(models.Model):
         null=False,
         max_digits=settings.DECIMAL_MAX_DIGITS,
         decimal_places=settings.DECIMAL_PLACES,
+        validators=[MinValueValidator(Decimal("0"))],
     )
     count = models.PositiveIntegerField(default=0)
     type = models.CharField(choices=InvestmentTypes.choices, null=False)
@@ -76,6 +78,7 @@ class LimitOrder(Order):
         null=False,
         max_digits=settings.DECIMAL_MAX_DIGITS,
         decimal_places=settings.DECIMAL_PLACES,
+        validators=[MinValueValidator(Decimal("0"))],
     )
     activated_status = models.CharField(
         choices=OrderActivatedStatuses.choices, default=OrderActivatedStatuses.LTE
@@ -98,6 +101,7 @@ class InvestmentPortfolio(models.Model):
         null=False,
         max_digits=settings.DECIMAL_MAX_DIGITS,
         decimal_places=settings.DECIMAL_PLACES,
+        validators=[MinValueValidator(Decimal("0"))],
     )
     is_subscribed = models.BooleanField(default=True)
     owner = models.ForeignKey(
@@ -118,6 +122,7 @@ class Trade(models.Model):
         null=False,
         max_digits=settings.DECIMAL_MAX_DIGITS,
         decimal_places=settings.DECIMAL_PLACES,
+        validators=[MinValueValidator(Decimal("0"))],
     )
     seller = models.ForeignKey(
         "InvestmentPortfolio", on_delete=models.DO_NOTHING, related_name="seller"
