@@ -68,6 +68,7 @@ class User(AbstractBaseUser):
         default=Decimal("0"),
         validators=[MinValueValidator(Decimal("0"))],
     )
+    investments = models.ManyToManyField("brokers.Investment")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
