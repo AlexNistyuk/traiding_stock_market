@@ -103,7 +103,6 @@ class InvestmentPortfolio(models.Model):
         decimal_places=settings.DECIMAL_PLACES,
         validators=[MinValueValidator(Decimal("0"))],
     )
-    is_subscribed = models.BooleanField(default=True)
     owner = models.ForeignKey(
         "users.User", on_delete=models.CASCADE, related_name="portfolio"
     )
