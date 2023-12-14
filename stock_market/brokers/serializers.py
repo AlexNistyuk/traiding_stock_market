@@ -9,37 +9,301 @@ from brokers.models import (
 from rest_framework import serializers
 
 
-class InvestmentSerializer(serializers.ModelSerializer):
+class InvestmentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Investment
-        fields = "__all__"
+        fields = (
+            "name",
+            "image",
+            "price",
+            "count",
+            "type",
+            "created_at",
+            "updated_at",
+        )
+
+        read_only_fields = (
+            "created_at",
+            "updated_at",
+        )
 
 
-class MarketOrderSerializer(serializers.ModelSerializer):
+class InvestmentRetrieveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Investment
+        fields = (
+            "name",
+            "image",
+            "price",
+            "count",
+            "type",
+            "created_at",
+            "updated_at",
+        )
+
+
+class InvestmentUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Investment
+        fields = (
+            "name",
+            "image",
+            "price",
+            "count",
+            "type",
+            "created_at",
+            "updated_at",
+        )
+
+        read_only_fields = (
+            "created_at",
+            "updated_at",
+        )
+
+
+class MarketOrderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MarketOrder
-        fields = "__all__"
+        fields = (
+            "count",
+            "status",
+            "is_sell",
+            "owner",
+            "investment",
+            "created_at",
+            "updated_at",
+        )
+
+        read_only_fields = (
+            "status",
+            "created_at",
+            "updated_at",
+        )
 
 
-class LimitOrderSerializer(serializers.ModelSerializer):
+class MarketOrderRetrieveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MarketOrder
+        fields = (
+            "count",
+            "status",
+            "is_sell",
+            "owner",
+            "investment",
+            "created_at",
+            "updated_at",
+        )
+
+
+class MarketOrderUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MarketOrder
+        fields = (
+            "count",
+            "status",
+            "is_sell",
+            "owner",
+            "investment",
+            "created_at",
+            "updated_at",
+        )
+
+        read_only_fields = (
+            "created_at",
+            "updated_at",
+        )
+
+
+class LimitOrderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = LimitOrder
-        fields = "__all__"
+        fields = (
+            "price",
+            "activated_status",
+            "count",
+            "status",
+            "is_sell",
+            "owner",
+            "investment",
+            "created_at",
+            "updated_at",
+        )
+
+        read_only_fields = (
+            "status" "created_at",
+            "updated_at",
+        )
 
 
-class InvestmentPortfolioSerializer(serializers.ModelSerializer):
+class LimitOrderRetrieveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LimitOrder
+        fields = (
+            "price",
+            "activated_status",
+            "count",
+            "status",
+            "is_sell",
+            "owner",
+            "investment",
+            "created_at",
+            "updated_at",
+        )
+
+
+class LimitOrderUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LimitOrder
+        fields = (
+            "price",
+            "activated_status",
+            "count",
+            "status",
+            "is_sell",
+            "owner",
+            "investment",
+            "created_at",
+            "updated_at",
+        )
+
+        read_only_fields = (
+            "created_at",
+            "updated_at",
+        )
+
+
+class InvestmentPortfolioCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvestmentPortfolio
-        fields = "__all__"
+        fields = (
+            "count",
+            "spend_amount",
+            "owner",
+            "investment",
+            "created_at",
+            "updated_at",
+        )
+
+        read_only_fields = (
+            "spend_amount",
+            "created_at",
+            "updated_at",
+        )
 
 
-class TradeSerializer(serializers.ModelSerializer):
+class InvestmentPortfolioRetrieveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvestmentPortfolio
+        fields = (
+            "count",
+            "spend_amount",
+            "owner",
+            "investment",
+            "created_at",
+            "updated_at",
+        )
+
+
+class InvestmentPortfolioUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvestmentPortfolio
+        fields = (
+            "count",
+            "spend_amount",
+            "owner",
+            "investment",
+            "created_at",
+            "updated_at",
+        )
+
+        read_only_fields = (
+            "spend_amount",
+            "created_at",
+            "updated_at",
+        )
+
+
+class TradeCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trade
-        fields = "__all__"
+        fields = (
+            "count",
+            "price",
+            "seller",
+            "buyer",
+            "investment",
+            "created_at",
+        )
+
+        read_only_fields = ("created_at",)
 
 
-class RecommendationSerializer(serializers.ModelSerializer):
+class TradeRetrieveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trade
+        fields = (
+            "count",
+            "price",
+            "seller",
+            "buyer",
+            "investment",
+            "created_at",
+        )
+
+
+class TradeUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trade
+        fields = (
+            "count",
+            "price",
+            "seller",
+            "buyer",
+            "investment",
+            "created_at",
+        )
+
+        read_only_fields = ("created_at",)
+
+
+class RecommendationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recommendation
-        fields = "__all__"
+        fields = (
+            "counter",
+            "investment",
+            "created_at",
+            "updated_at",
+        )
+
+        read_only_fields = (
+            "created_at",
+            "updated_at",
+        )
+
+
+class RecommendationRetrieveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recommendation
+        fields = (
+            "counter",
+            "investment",
+            "created_at",
+            "updated_at",
+        )
+
+
+class RecommendationUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recommendation
+        fields = (
+            "counter",
+            "investment",
+            "created_at",
+            "updated_at",
+        )
+
+        read_only_fields = (
+            "created_at",
+            "updated_at",
+        )

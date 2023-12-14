@@ -2,29 +2,70 @@ from rest_framework import serializers
 from users.models import User
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
-        write_only_fields = ("password",)
-        read_only_fields = (
-            "is_blocked",
+        fields = (
+            "email",
+            "username",
+            "password",
             "role",
+            "image",
+            "is_blocked",
+            "balance",
+            "subscriptions",
             "created_at",
             "updated_at",
-            "balance",
         )
 
+        read_only_fields = (
+            "role",
+            "is_blocked",
+            "balance",
+            "subscriptions",
+            "created_at",
+            "updated_at",
+        )
 
-class UserDetailSerializer(serializers.ModelSerializer):
+        write_only_fields = ("password",)
+
+
+class UserRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        exclude = ("password",)
-        read_only_fields = (
+        fields = (
             "email",
             "username",
             "role",
             "image",
+            "is_blocked",
+            "balance",
+            "subscriptions",
+            "created_at",
+            "updated_at",
+        )
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "email",
+            "username",
+            "role",
+            "image",
+            "is_blocked",
+            "balance",
+            "subscriptions",
+            "created_at",
+            "updated_at",
+        )
+
+        read_only_fields = (
+            "email",
+            "username",
+            "role",
+            "subscriptions",
             "created_at",
             "updated_at",
         )
