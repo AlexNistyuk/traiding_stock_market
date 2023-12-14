@@ -68,7 +68,7 @@ class User(AbstractBaseUser):
         default=Decimal("0"),
         validators=[MinValueValidator(Decimal("0"))],
     )
-    subscriptions = models.ManyToManyField("brokers.Investment")
+    subscriptions = models.ManyToManyField("brokers.Investment", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
