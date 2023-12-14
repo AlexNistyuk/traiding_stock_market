@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "users",
+    "brokers",
 ]
 
 MIDDLEWARE = [
@@ -125,9 +127,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
+MEDIA_URL = os.path.join(BASE_DIR.parent, "media/")
+MEDIA_ROOT = "/media/"
+
 STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = "users.User"
+
+DECIMAL_MAX_DIGITS = env.int("DECIMAL_MAX_DIGITS")
+DECIMAL_PLACES = env.int("DECIMAL_PLACES")
