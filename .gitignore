@@ -2,3 +2,4 @@
 /.env
 /postgres_data
 /media
+/stock_market/.coverage
