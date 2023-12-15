@@ -208,6 +208,13 @@ class InvestmentPortfolioCreateSerializer(serializers.ModelSerializer):
             "updated_at",
         )
 
+    def create(self, validated_data):
+        validated_data["spend_amount"] = (
+            validated_data["count"] * validated_data["investment"].price
+        )
+
+        return InvestmentPortfolio.objects.create(**validated_data)
+
 
 class InvestmentPortfolioRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
@@ -257,7 +264,16 @@ class TradeCreateSerializer(serializers.ModelSerializer):
             "created_at",
         )
 
-        read_only_fields = ("id", "created_at")
+        read_only_fields = (
+            "id",
+            "created_at",
+            "price",
+        )
+
+    def create(self, validated_data):
+        validated_data["price"] = validated_data["investment"].price
+
+        return Trade.objects.create(**validated_data)
 
 
 class TradeRetrieveSerializer(serializers.ModelSerializer):
@@ -287,7 +303,17 @@ class TradeUpdateSerializer(serializers.ModelSerializer):
             "created_at",
         )
 
-        read_only_fields = ("id", "created_at")
+        read_only_fields = ("id", "created_at", "price")
+
+    def update(self, instance, validated_data):
+        instance.count = validated_data["count"]
+        instance.seller = validated_data["seller"]
+        instance.buyer = validated_data["buyer"]
+        instance.investment = validated_data["investment"]
+        instance.price = validated_data["investment"].price
+        instance.save()
+
+        return instance
 
 
 class RecommendationCreateSerializer(serializers.ModelSerializer):

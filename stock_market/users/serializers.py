@@ -79,6 +79,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "email",
             "username",
             "role",
+            "image",
             "subscriptions",
             "created_at",
             "updated_at",
