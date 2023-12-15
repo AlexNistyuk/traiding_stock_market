@@ -27,7 +27,7 @@ class OrderStatuses(models.TextChoices):
 
 class Investment(models.Model):
     name = models.CharField(max_length=128, unique=True, db_index=True, null=False)
-    image = models.ImageField(upload_to="logos/", blank=True)
+    image = models.ImageField(null=True, upload_to="logos/", blank=True)
     price = models.DecimalField(
         null=False,
         max_digits=settings.DECIMAL_MAX_DIGITS,
