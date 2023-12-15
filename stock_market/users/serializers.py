@@ -6,6 +6,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
+            "id",
             "email",
             "username",
             "password",
@@ -19,6 +20,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
+            "id",
             "role",
             "is_blocked",
             "balance",
@@ -43,6 +45,7 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
+            "id",
             "email",
             "username",
             "role",
@@ -59,6 +62,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
+            "id",
             "email",
             "username",
             "role",
@@ -71,6 +75,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
+            "id",
             "email",
             "username",
             "role",
