@@ -148,7 +148,7 @@ class InvestmentPortfolioTradeRetrieveAPIView(
     serializer_class = TradeRetrieveSerializer
 
     def get_queryset(self):
-        portfolio = InvestmentPortfolio.objects.get(pk=self.kwargs["pk"])
+        portfolio = InvestmentPortfolio.objects.get(pk=self.kwargs["portfolio_pk"])
 
         return Trade.objects.filter(Q(seller=portfolio) | Q(buyer=portfolio))
 

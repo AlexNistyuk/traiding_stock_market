@@ -15,7 +15,8 @@ urlpatterns = [
     path("orders/limit/", LimitOrderListCreateUpdateAPIView.as_view()),
     path("portfolios/", InvestmentPortfolioListCreateUpdateAPIView.as_view()),
     path(
-        "portfolios/<int:pk>/trades/", InvestmentPortfolioTradeRetrieveAPIView.as_view()
+        "portfolios/<int:portfolio_pk>/trades/",
+        InvestmentPortfolioTradeRetrieveAPIView.as_view(),
     ),
     path("trades/", TradeListCreateUpdateAPIView.as_view()),
     path("recommendations/", RecommendationListCreateUpdateAPIView.as_view()),
