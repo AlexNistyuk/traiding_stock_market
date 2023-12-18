@@ -1,7 +1,11 @@
-from django.urls import path
-from users.views import UserChangePasswordAPIView, UserListCreateUpdateAPIView
+from rest_framework.routers import DefaultRouter
+from users.views import UserChangePasswordViewSet, UserViewSet
 
-urlpatterns = [
-    path("users/", UserListCreateUpdateAPIView.as_view()),
-    path("users/change-password/", UserChangePasswordAPIView.as_view()),
-]
+user_router = DefaultRouter()
+user_router.register(r"users", UserViewSet, basename="user")
+
+password_router = DefaultRouter()
+password_router.register(r"change-password", UserChangePasswordViewSet)
+
+urlpatterns = user_router.urls
+urlpatterns += password_router.urls

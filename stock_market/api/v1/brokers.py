@@ -1,23 +1,34 @@
 from brokers.views import (
-    InvestmentListCreateUpdateAPIView,
-    InvestmentPortfolioListCreateUpdateAPIView,
-    InvestmentPortfolioTradeRetrieveAPIView,
-    LimitOrderListCreateUpdateAPIView,
-    MarketOrderListCreateUpdateAPIView,
-    RecommendationListCreateUpdateAPIView,
-    TradeListCreateUpdateAPIView,
+    InvestmentPortfolioViewSet,
+    InvestmentViewSet,
+    LimitOrderViewSet,
+    MarketOrderViewSet,
+    RecommendationViewSet,
+    TradeViewSet,
 )
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-urlpatterns = [
-    path("investments/", InvestmentListCreateUpdateAPIView.as_view()),
-    path("orders/market/", MarketOrderListCreateUpdateAPIView.as_view()),
-    path("orders/limit/", LimitOrderListCreateUpdateAPIView.as_view()),
-    path("portfolios/", InvestmentPortfolioListCreateUpdateAPIView.as_view()),
-    path(
-        "portfolios/<int:portfolio_pk>/trades/",
-        InvestmentPortfolioTradeRetrieveAPIView.as_view(),
-    ),
-    path("trades/", TradeListCreateUpdateAPIView.as_view()),
-    path("recommendations/", RecommendationListCreateUpdateAPIView.as_view()),
-]
+investment_router = DefaultRouter()
+investment_router.register(r"investments", InvestmentViewSet)
+
+market_order_router = DefaultRouter()
+market_order_router.register(r"orders/market", MarketOrderViewSet)
+
+limit_order_router = DefaultRouter()
+limit_order_router.register(r"orders/limit", LimitOrderViewSet)
+
+investment_portfolio_router = DefaultRouter()
+investment_portfolio_router.register(r"portfolios", InvestmentPortfolioViewSet)
+
+trade_router = DefaultRouter()
+trade_router.register(r"trades", TradeViewSet)
+
+recommendation_router = DefaultRouter()
+recommendation_router.register(r"recommendations", RecommendationViewSet)
+
+urlpatterns = investment_router.urls
+urlpatterns += market_order_router.urls
+urlpatterns += limit_order_router.urls
+urlpatterns += investment_portfolio_router.urls
+urlpatterns += trade_router.urls
+urlpatterns += recommendation_router.urls
