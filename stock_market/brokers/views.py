@@ -58,7 +58,7 @@ class InvestmentListCreateUpdateAPIView(
     #     return Investment.objects.get(pk=self.request.data["id"])
 
     def put(self, request, *args, **kwargs):
-        self.kwargs["pk"] = request.data["id"]
+        self.kwargs[self.lookup_field] = request.data["id"]
 
         return self.update(request, *args, **kwargs)
         # instance = self.get_object()
