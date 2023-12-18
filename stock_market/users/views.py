@@ -1,5 +1,4 @@
 from rest_framework import generics, mixins
-from rest_framework.response import Response
 from users.models import User
 from users.serializers import (
     ChangePasswordSerializer,
@@ -31,16 +30,10 @@ class UserListCreateUpdateAPIView(
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
-    def get_object(self):
-        return User.objects.get(pk=self.request.data["id"])
-
     def put(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        self.kwargs[self.lookup_field] = request.data["id"]
 
-        return Response(data=serializer.data)
+        return self.update(request, *args, **kwargs)
 
 
 class UserChangePasswordAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
