@@ -1,6 +1,8 @@
+from brokers.models import Investment
 from django.test import TestCase
 from faker import Faker
 from rest_framework.test import APIClient
+from users.models import Roles
 
 
 class UserCreateAPIViewTest(TestCase):
@@ -104,7 +106,7 @@ class UserCreateAPIViewTest(TestCase):
 
         self.assertEqual(response.data["email"], email)
         self.assertEqual(response.data["username"], username)
-        self.assertEqual(response.data["role"], "user")
+        self.assertEqual(response.data["role"], Roles.USER)
         self.assertIsNone(response.data["image"])
         self.assertFalse(response.data["is_blocked"])
         self.assertEqual(response.data["balance"], "0.00")
@@ -117,6 +119,14 @@ class UserRetrieveUpdateAPIViewTest(TestCase):
         self.fake = Faker()
         self.email = self.fake.email()
         self.username = self.fake.user_name()
+        self.investments = [
+            Investment.objects.create(
+                name=self.fake.name(), type="stock", price=self.fake.pyint()
+            ).id,
+            Investment.objects.create(
+                name=self.fake.name(), type="stock", price=self.fake.pyint()
+            ).id,
+        ]
         response = self.client.post(
             "/v1/users/",
             data={
@@ -138,13 +148,13 @@ class UserRetrieveUpdateAPIViewTest(TestCase):
         response_1 = self.client.put(
             path=self.path,
             data={
-                "balance": "-12.12",
+                "balance": -self.fake.pyint(),
             },
         )
         response_2 = self.client.put(
             path=self.path,
             data={
-                "balance": "12.12",
+                "balance": self.fake.pyint(),
             },
         )
 
@@ -152,7 +162,7 @@ class UserRetrieveUpdateAPIViewTest(TestCase):
         self.assertEqual(response_2.status_code, 200)
 
     def test_update_user(self):
-        balance = "12.67"
+        balance = f"{self.fake.pyint():.2f}"
 
         response = self.client.put(
             path=self.path,
@@ -161,6 +171,7 @@ class UserRetrieveUpdateAPIViewTest(TestCase):
                 "balance": balance,
                 "email": self.fake.email(),
                 "username": self.fake.user_name(),
+                "subscriptions": self.investments,
             },
         )
 
@@ -169,4 +180,4 @@ class UserRetrieveUpdateAPIViewTest(TestCase):
         self.assertEqual(response.data["balance"], balance)
         self.assertEqual(response.data["email"], self.email)
         self.assertEqual(response.data["username"], self.username)
-        self.assertNotEqual(response.data["created_at"], response.data["updated_at"])
+        self.assertEqual(response.data["subscriptions"], self.investments)

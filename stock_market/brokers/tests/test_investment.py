@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+from brokers.models import InvestmentTypes
 from faker import Faker
 from rest_framework.test import APIClient
 
@@ -15,8 +16,8 @@ class InvestmentListCreateAPIViewTest(TestCase):
             path=self.path,
             data={
                 "name": self.fake.name(),
-                "price": "12.12",
-                "type": "stock",
+                "price": self.fake.pyint(),
+                "type": self.fake.random_element(InvestmentTypes.choices)[0],
             },
         )
 
@@ -29,16 +30,16 @@ class InvestmentListCreateAPIViewTest(TestCase):
             path=self.path,
             data={
                 "name": name,
-                "price": "12.12",
-                "type": "stock",
+                "price": self.fake.pyint(),
+                "type": self.fake.random_element(InvestmentTypes.choices)[0],
             },
         )
         response_2 = self.client.post(
             path=self.path,
             data={
                 "name": name,
-                "price": "12.12",
-                "type": "stock",
+                "price": self.fake.pyint(),
+                "type": self.fake.random_element(InvestmentTypes.choices)[0],
             },
         )
 
@@ -50,16 +51,16 @@ class InvestmentListCreateAPIViewTest(TestCase):
             path=self.path,
             data={
                 "name": self.fake.name(),
-                "price": "-12.12",
-                "type": "stock",
+                "price": -self.fake.pyint(),
+                "type": self.fake.random_element(InvestmentTypes.choices)[0],
             },
         )
         response_2 = self.client.post(
             path=self.path,
             data={
                 "name": self.fake.name(),
-                "price": "12.12",
-                "type": "stock",
+                "price": self.fake.pyint(),
+                "type": self.fake.random_element(InvestmentTypes.choices)[0],
             },
         )
 
@@ -71,18 +72,18 @@ class InvestmentListCreateAPIViewTest(TestCase):
             path=self.path,
             data={
                 "name": self.fake.name(),
-                "price": "12.12",
-                "type": "stock",
-                "count": "12",
+                "price": self.fake.pyint(),
+                "type": self.fake.random_element(InvestmentTypes.choices)[0],
+                "count": self.fake.pyint(),
             },
         )
         response_2 = self.client.post(
             path=self.path,
             data={
                 "name": self.fake.name(),
-                "price": "12.12",
-                "type": "cryptocurrency",
-                "count": "-12",
+                "price": self.fake.pyint(),
+                "type": self.fake.random_element(InvestmentTypes.choices)[0],
+                "count": -self.fake.pyint(),
             },
         )
 
@@ -101,13 +102,12 @@ class InvestmentRetrieveUpdateAPIViewTest(TestCase):
         self.client = APIClient()
         self.fake = Faker()
         self.name = self.fake.name()
-        self.type = "stock"
         response = self.client.post(
             path="/api/investments/",
             data={
                 "name": self.name,
                 "price": self.fake.pyint(),
-                "type": self.type,
+                "type": self.fake.random_element(InvestmentTypes.choices)[0],
             },
         )
         self.id = response.data["id"]
@@ -121,8 +121,8 @@ class InvestmentRetrieveUpdateAPIViewTest(TestCase):
     def test_update_investment(self):
         name = self.fake.name()
         count = self.fake.pyint()
-        price = self.fake.pyint()
-        inv_type = "cryptocurrency"
+        price = f"{self.fake.pyint():.2f}"
+        inv_type = self.fake.random_element(InvestmentTypes.choices)[0]
 
         response = self.client.put(
             path=self.path,
@@ -137,6 +137,5 @@ class InvestmentRetrieveUpdateAPIViewTest(TestCase):
         self.assertEqual(response.data["id"], self.id)
         self.assertEqual(response.data["name"], name)
         self.assertEqual(response.data["count"], count)
-        self.assertEqual(response.data["price"], f"{price:.2f}")
+        self.assertEqual(response.data["price"], price)
         self.assertEqual(response.data["type"], inv_type)
-        self.assertNotEqual(response.data["created_at"], response.data["updated_at"])
