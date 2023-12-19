@@ -53,7 +53,7 @@ class UserModelTest(TestCase):
         self.assertRaises(IntegrityError, user.save)
 
 
-class UserViewSet(TestCase):
+class UserViewSetTest(TestCase):
     def setUp(self) -> None:
         self.path = "/v1/users/"
 
