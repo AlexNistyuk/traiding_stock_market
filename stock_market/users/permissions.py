@@ -10,3 +10,11 @@ class IsAdmin(BasePermission):
 class IsAnalyst(BasePermission):
     def has_permission(self, request, view):
         return request.user.role == Roles.ANALYST
+
+
+class IsUser(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.role == Roles.USER
+
+    def has_object_permission(self, request, view, obj):
+        return request.user.pk == obj.pk
