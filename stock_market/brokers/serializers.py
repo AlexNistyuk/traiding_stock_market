@@ -24,7 +24,6 @@ class InvestmentCreateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
-            "id",
             "created_at",
             "updated_at",
         )
@@ -60,7 +59,6 @@ class InvestmentUpdateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
-            "id",
             "created_at",
             "updated_at",
         )
@@ -74,14 +72,13 @@ class MarketOrderCreateSerializer(serializers.ModelSerializer):
             "count",
             "status",
             "is_sell",
-            "owner",
+            "portfolio",
             "investment",
             "created_at",
             "updated_at",
         )
 
         read_only_fields = (
-            "id",
             "status",
             "investment",
             "created_at",
@@ -97,7 +94,7 @@ class MarketOrderRetrieveSerializer(serializers.ModelSerializer):
             "count",
             "status",
             "is_sell",
-            "owner",
+            "portfolio",
             "investment",
             "created_at",
             "updated_at",
@@ -112,14 +109,13 @@ class MarketOrderUpdateSerializer(serializers.ModelSerializer):
             "count",
             "status",
             "is_sell",
-            "owner",
+            "portfolio",
             "investment",
             "created_at",
             "updated_at",
         )
 
         read_only_fields = (
-            "id",
             "investment",
             "created_at",
             "updated_at",
@@ -136,14 +132,13 @@ class LimitOrderCreateSerializer(serializers.ModelSerializer):
             "count",
             "status",
             "is_sell",
-            "owner",
+            "portfolio",
             "investment",
             "created_at",
             "updated_at",
         )
 
         read_only_fields = (
-            "id",
             "status",
             "investment",
             "created_at",
@@ -161,7 +156,7 @@ class LimitOrderRetrieveSerializer(serializers.ModelSerializer):
             "count",
             "status",
             "is_sell",
-            "owner",
+            "portfolio",
             "investment",
             "created_at",
             "updated_at",
@@ -178,14 +173,13 @@ class LimitOrderUpdateSerializer(serializers.ModelSerializer):
             "count",
             "status",
             "is_sell",
-            "owner",
+            "portfolio",
             "investment",
             "created_at",
             "updated_at",
         )
 
         read_only_fields = (
-            "id",
             "investment",
             "created_at",
             "updated_at",
@@ -206,7 +200,6 @@ class InvestmentPortfolioCreateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
-            "id",
             "spend_amount",
             "created_at",
             "updated_at",
@@ -241,7 +234,6 @@ class InvestmentPortfolioUpdateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
-            "id",
             "spend_amount",
             "created_at",
             "updated_at",
@@ -262,7 +254,6 @@ class TradeCreateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
-            "id",
             "created_at",
             "price",
         )
@@ -295,7 +286,7 @@ class TradeUpdateSerializer(serializers.ModelSerializer):
             "created_at",
         )
 
-        read_only_fields = ("id", "created_at", "price")
+        read_only_fields = ("created_at", "price")
 
 
 class RecommendationCreateSerializer(serializers.ModelSerializer):
@@ -310,7 +301,6 @@ class RecommendationCreateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
-            "id",
             "created_at",
             "updated_at",
         )
@@ -340,7 +330,6 @@ class RecommendationUpdateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
-            "id",
             "created_at",
             "updated_at",
         )

@@ -1,34 +1,34 @@
 from brokers.views import (
-    InvestmentListCreateAPIView,
-    InvestmentPortfolioCreateAPIView,
-    InvestmentPortfolioRetrieveUpdateAPIView,
-    InvestmentPortfolioTradeRetrieveAPIView,
-    InvestmentRetrieveUpdateAPIView,
-    LimitOrderListCreateAPIView,
-    LimitOrderRetrieveUpdateAPIView,
-    MarketOrderListCreateAPIView,
-    MarketOrderRetrieveUpdateAPIView,
-    RecommendationListCreateAPIView,
-    RecommendationRetrieveUpdateAPIView,
-    TradeListCreateAPIView,
-    TradeRetrieveUpdateAPIView,
+    InvestmentPortfolioViewSet,
+    InvestmentViewSet,
+    LimitOrderViewSet,
+    MarketOrderViewSet,
+    RecommendationViewSet,
+    TradeViewSet,
 )
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-urlpatterns = [
-    path("investments/", InvestmentListCreateAPIView.as_view()),
-    path("investments/<int:pk>/", InvestmentRetrieveUpdateAPIView.as_view()),
-    path("orders/market/", MarketOrderListCreateAPIView.as_view()),
-    path("orders/market/<int:pk>/", MarketOrderRetrieveUpdateAPIView.as_view()),
-    path("orders/limit/", LimitOrderListCreateAPIView.as_view()),
-    path("orders/limit/<int:pk>/", LimitOrderRetrieveUpdateAPIView.as_view()),
-    path("portfolio/", InvestmentPortfolioCreateAPIView.as_view()),
-    path("portfolio/<int:pk>/", InvestmentPortfolioRetrieveUpdateAPIView.as_view()),
-    path(
-        "portfolio/<int:pk>/trades/", InvestmentPortfolioTradeRetrieveAPIView.as_view()
-    ),
-    path("trades/", TradeListCreateAPIView.as_view()),
-    path("trades/<int:pk>/", TradeRetrieveUpdateAPIView.as_view()),
-    path("recommendations/", RecommendationListCreateAPIView.as_view()),
-    path("recommendations/<int:pk>/", RecommendationRetrieveUpdateAPIView.as_view()),
-]
+investment_router = DefaultRouter()
+investment_router.register(r"investments", InvestmentViewSet)
+
+market_order_router = DefaultRouter()
+market_order_router.register(r"orders/market", MarketOrderViewSet)
+
+limit_order_router = DefaultRouter()
+limit_order_router.register(r"orders/limit", LimitOrderViewSet)
+
+investment_portfolio_router = DefaultRouter()
+investment_portfolio_router.register(r"portfolios", InvestmentPortfolioViewSet)
+
+trade_router = DefaultRouter()
+trade_router.register(r"trades", TradeViewSet)
+
+recommendation_router = DefaultRouter()
+recommendation_router.register(r"recommendations", RecommendationViewSet)
+
+urlpatterns = investment_router.urls
+urlpatterns += market_order_router.urls
+urlpatterns += limit_order_router.urls
+urlpatterns += investment_portfolio_router.urls
+urlpatterns += trade_router.urls
+urlpatterns += recommendation_router.urls

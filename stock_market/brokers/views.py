@@ -26,238 +26,124 @@ from brokers.serializers import (
     TradeRetrieveSerializer,
     TradeUpdateSerializer,
 )
-from django.db.models import Q
-from rest_framework import generics, mixins
+from rest_framework import mixins, viewsets
 
 
-class InvestmentListCreateAPIView(
-    mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView
+class InvestmentViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
 ):
     queryset = Investment.objects.all()
-    serializer_method_classes = {
-        "get": InvestmentRetrieveSerializer,
-        "post": InvestmentCreateSerializer,
+    serializer_action_classes = {
+        "list": InvestmentRetrieveSerializer,
+        "retrieve": InvestmentRetrieveSerializer,
+        "create": InvestmentCreateSerializer,
+        "update": InvestmentUpdateSerializer,
+        "partial_update": InvestmentUpdateSerializer,
     }
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.request.method.lower()]
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+        return self.serializer_action_classes[self.action]
 
 
-class InvestmentRetrieveUpdateAPIView(
-    mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView
-):
-    queryset = Investment.objects.all()
-    serializer_method_classes = {
-        "get": InvestmentRetrieveSerializer,
-        "put": InvestmentUpdateSerializer,
-    }
-
-    def get_serializer_class(self):
-        return self.serializer_method_classes[self.request.method.lower()]
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-
-class MarketOrderListCreateAPIView(
-    mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView
+class MarketOrderViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
 ):
     queryset = MarketOrder.objects.all()
-    serializer_method_classes = {
-        "get": MarketOrderRetrieveSerializer,
-        "post": MarketOrderCreateSerializer,
+    serializer_action_classes = {
+        "list": MarketOrderRetrieveSerializer,
+        "retrieve": MarketOrderRetrieveSerializer,
+        "create": MarketOrderCreateSerializer,
+        "update": MarketOrderUpdateSerializer,
+        "partial_update": MarketOrderUpdateSerializer,
     }
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.request.method.lower()]
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+        return self.serializer_action_classes[self.action]
 
 
-class MarketOrderRetrieveUpdateAPIView(
-    mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView
-):
-    serializer_method_classes = {
-        "get": MarketOrderRetrieveSerializer,
-        "put": MarketOrderUpdateSerializer,
-    }
-    queryset = MarketOrder.objects.all()
-
-    def get_serializer_class(self):
-        return self.serializer_method_classes[self.request.method.lower()]
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-
-class LimitOrderListCreateAPIView(
-    mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView
+class LimitOrderViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
 ):
     queryset = LimitOrder.objects.all()
-    serializer_method_classes = {
-        "get": LimitOrderRetrieveSerializer,
-        "post": LimitOrderCreateSerializer,
+    serializer_action_classes = {
+        "list": LimitOrderRetrieveSerializer,
+        "retrieve": LimitOrderRetrieveSerializer,
+        "create": LimitOrderCreateSerializer,
+        "update": LimitOrderUpdateSerializer,
+        "partial_update": LimitOrderUpdateSerializer,
     }
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.request.method.lower()]
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+        return self.serializer_action_classes[self.action]
 
 
-class LimitOrderRetrieveUpdateAPIView(
-    mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView
+class InvestmentPortfolioViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
 ):
-    serializer_method_classes = {
-        "get": LimitOrderRetrieveSerializer,
-        "put": LimitOrderUpdateSerializer,
-    }
-    queryset = LimitOrder.objects.all()
-
-    def get_serializer_class(self):
-        return self.serializer_method_classes[self.request.method.lower()]
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-
-class InvestmentPortfolioCreateAPIView(
-    mixins.CreateModelMixin, generics.GenericAPIView
-):
-    serializer_class = InvestmentPortfolioCreateSerializer
-    queryset = LimitOrder.objects.all()
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-
-
-class InvestmentPortfolioRetrieveUpdateAPIView(
-    mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView
-):
-    serializer_method_classes = {
-        "get": InvestmentPortfolioRetrieveSerializer,
-        "put": InvestmentPortfolioUpdateSerializer,
+    serializer_action_classes = {
+        "list": InvestmentPortfolioRetrieveSerializer,
+        "retrieve": InvestmentPortfolioRetrieveSerializer,
+        "create": InvestmentPortfolioCreateSerializer,
+        "update": InvestmentPortfolioUpdateSerializer,
+        "partial_update": InvestmentPortfolioUpdateSerializer,
     }
     queryset = InvestmentPortfolio.objects.all()
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.request.method.lower()]
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+        return self.serializer_action_classes[self.action]
 
 
-class InvestmentPortfolioTradeRetrieveAPIView(
-    mixins.ListModelMixin, generics.GenericAPIView
-):
-    serializer_class = TradeRetrieveSerializer
-
-    def get_queryset(self):
-        portfolio = InvestmentPortfolio.objects.get(pk=self.kwargs["pk"])
-
-        return Trade.objects.filter(Q(seller=portfolio) | Q(buyer=portfolio))
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-
-class TradeListCreateAPIView(
-    mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView
+class TradeViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
 ):
     queryset = Trade.objects.all()
-    serializer_method_classes = {
-        "get": TradeRetrieveSerializer,
-        "post": TradeCreateSerializer,
+    serializer_action_classes = {
+        "list": TradeRetrieveSerializer,
+        "retrieve": TradeRetrieveSerializer,
+        "create": TradeCreateSerializer,
+        "update": TradeUpdateSerializer,
+        "partial_update": TradeUpdateSerializer,
     }
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.request.method.lower()]
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+        return self.serializer_action_classes[self.action]
 
 
-class TradeRetrieveUpdateAPIView(
-    mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView
-):
-    serializer_method_classes = {
-        "get": TradeRetrieveSerializer,
-        "put": TradeUpdateSerializer,
-    }
-    queryset = Trade.objects.all()
-
-    def get_serializer_class(self):
-        return self.serializer_method_classes[self.request.method.lower()]
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
-
-
-class RecommendationListCreateAPIView(
-    mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView
+class RecommendationViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
 ):
     queryset = Recommendation.objects.all()
-    serializer_method_classes = {
-        "get": RecommendationRetrieveSerializer,
-        "post": RecommendationCreateSerializer,
+    serializer_action_classes = {
+        "list": RecommendationRetrieveSerializer,
+        "retrieve": RecommendationRetrieveSerializer,
+        "create": RecommendationCreateSerializer,
+        "update": RecommendationUpdateSerializer,
+        "partial_update": RecommendationUpdateSerializer,
     }
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.request.method.lower()]
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-
-
-class RecommendationRetrieveUpdateAPIView(
-    mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView
-):
-    serializer_method_classes = {
-        "get": RecommendationRetrieveSerializer,
-        "put": RecommendationUpdateSerializer,
-    }
-    queryset = Recommendation.objects.all()
-
-    def get_serializer_class(self):
-        return self.serializer_method_classes[self.request.method.lower()]
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+        return self.serializer_action_classes[self.action]

@@ -1,4 +1,4 @@
-from rest_framework import generics, mixins
+from rest_framework import mixins, viewsets
 from users.models import User
 from users.serializers import (
     ChangePasswordSerializer,
@@ -8,36 +8,26 @@ from users.serializers import (
 )
 
 
-class UserCreateAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
-    serializer_class = UserCreateSerializer
-    queryset = User.objects.all()
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-
-
-class UserRetrieveUpdateAPIView(
-    mixins.RetrieveModelMixin, mixins.UpdateModelMixin, generics.GenericAPIView
+class UserViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
 ):
-    serializer_method_classes = {
-        "get": UserRetrieveSerializer,
-        "put": UserUpdateSerializer,
-    }
     queryset = User.objects.all()
+    serializer_action_classes = {
+        "retrieve": UserRetrieveSerializer,
+        "list": UserRetrieveSerializer,
+        "create": UserCreateSerializer,
+        "update": UserUpdateSerializer,
+        "partial_update": UserUpdateSerializer,
+    }
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.request.method.lower()]
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+        return self.serializer_action_classes[self.action]
 
 
-class UserChangePasswordAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
-    serializer_class = ChangePasswordSerializer
+class UserChangePasswordViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = User.objects.all()
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+    serializer_class = ChangePasswordSerializer
