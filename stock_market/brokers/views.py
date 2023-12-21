@@ -1,4 +1,11 @@
-from brokers.models import Investment, LimitOrder, MarketOrder, Recommendation, Trade
+from brokers.models import (
+    Investment,
+    InvestmentPortfolio,
+    LimitOrder,
+    MarketOrder,
+    Recommendation,
+    Trade,
+)
 from brokers.serializers import (
     InvestmentCreateSerializer,
     InvestmentPortfolioCreateSerializer,
@@ -30,7 +37,7 @@ class InvestmentViewSet(
     viewsets.GenericViewSet,
 ):
     queryset = Investment.objects.all()
-    serializer_method_classes = {
+    serializer_action_classes = {
         "list": InvestmentRetrieveSerializer,
         "retrieve": InvestmentRetrieveSerializer,
         "create": InvestmentCreateSerializer,
@@ -39,7 +46,7 @@ class InvestmentViewSet(
     }
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.action]
+        return self.serializer_action_classes[self.action]
 
 
 class MarketOrderViewSet(
@@ -50,7 +57,7 @@ class MarketOrderViewSet(
     viewsets.GenericViewSet,
 ):
     queryset = MarketOrder.objects.all()
-    serializer_method_classes = {
+    serializer_action_classes = {
         "list": MarketOrderRetrieveSerializer,
         "retrieve": MarketOrderRetrieveSerializer,
         "create": MarketOrderCreateSerializer,
@@ -59,7 +66,7 @@ class MarketOrderViewSet(
     }
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.action]
+        return self.serializer_action_classes[self.action]
 
 
 class LimitOrderViewSet(
@@ -69,8 +76,8 @@ class LimitOrderViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = MarketOrder.objects.all()
-    serializer_method_classes = {
+    queryset = LimitOrder.objects.all()
+    serializer_action_classes = {
         "list": LimitOrderRetrieveSerializer,
         "retrieve": LimitOrderRetrieveSerializer,
         "create": LimitOrderCreateSerializer,
@@ -79,7 +86,7 @@ class LimitOrderViewSet(
     }
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.action]
+        return self.serializer_action_classes[self.action]
 
 
 class InvestmentPortfolioViewSet(
@@ -89,17 +96,17 @@ class InvestmentPortfolioViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
-    serializer_method_classes = {
+    serializer_action_classes = {
         "list": InvestmentPortfolioRetrieveSerializer,
         "retrieve": InvestmentPortfolioRetrieveSerializer,
         "create": InvestmentPortfolioCreateSerializer,
         "update": InvestmentPortfolioUpdateSerializer,
         "partial_update": InvestmentPortfolioUpdateSerializer,
     }
-    queryset = LimitOrder.objects.all()
+    queryset = InvestmentPortfolio.objects.all()
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.action]
+        return self.serializer_action_classes[self.action]
 
 
 class TradeViewSet(
@@ -110,7 +117,7 @@ class TradeViewSet(
     viewsets.GenericViewSet,
 ):
     queryset = Trade.objects.all()
-    serializer_method_classes = {
+    serializer_action_classes = {
         "list": TradeRetrieveSerializer,
         "retrieve": TradeRetrieveSerializer,
         "create": TradeCreateSerializer,
@@ -119,7 +126,7 @@ class TradeViewSet(
     }
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.action]
+        return self.serializer_action_classes[self.action]
 
 
 class RecommendationViewSet(
@@ -130,7 +137,7 @@ class RecommendationViewSet(
     viewsets.GenericViewSet,
 ):
     queryset = Recommendation.objects.all()
-    serializer_method_classes = {
+    serializer_action_classes = {
         "list": RecommendationRetrieveSerializer,
         "retrieve": RecommendationRetrieveSerializer,
         "create": RecommendationCreateSerializer,
@@ -139,4 +146,4 @@ class RecommendationViewSet(
     }
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.action]
+        return self.serializer_action_classes[self.action]

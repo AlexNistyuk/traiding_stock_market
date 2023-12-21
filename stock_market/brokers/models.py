@@ -58,7 +58,7 @@ class Order(models.Model):
         choices=OrderStatuses.choices, default=OrderStatuses.ACTIVE
     )
     is_sell = models.BooleanField(default=False)
-    owner = models.ForeignKey("InvestmentPortfolio", on_delete=models.CASCADE)
+    portfolio = models.ForeignKey("InvestmentPortfolio", on_delete=models.CASCADE)
     investment = models.ForeignKey("Investment", on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -113,6 +113,12 @@ class InvestmentPortfolio(models.Model):
     class Meta:
         db_table = "investment_portfolio"
         ordering = ["-count"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(spend_amount__gte=Decimal("0")),
+                name="investment_portfolio_spend_amount_non_negative",
+            ),
+        ]
 
 
 class Trade(models.Model):

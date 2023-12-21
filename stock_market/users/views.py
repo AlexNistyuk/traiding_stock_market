@@ -16,7 +16,7 @@ class UserViewSet(
     viewsets.GenericViewSet,
 ):
     queryset = User.objects.all()
-    serializer_method_classes = {
+    serializer_action_classes = {
         "retrieve": UserRetrieveSerializer,
         "list": UserRetrieveSerializer,
         "create": UserCreateSerializer,
@@ -25,7 +25,7 @@ class UserViewSet(
     }
 
     def get_serializer_class(self):
-        return self.serializer_method_classes[self.action]
+        return self.serializer_action_classes[self.action]
 
 
 class UserChangePasswordViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
