@@ -28,6 +28,7 @@ class UserViewSet(
         return self.serializer_action_classes[self.action]
 
 
+# TODO: create action for this and include it to UserViewSet
 class UserChangePasswordViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = ChangePasswordSerializer
