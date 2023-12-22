@@ -15,7 +15,7 @@ class JWTAuthMiddleware(MiddlewareMixin):
     }
 
     def process_request(self, request):
-        path = request.path
+        path = request.path if request.path.endswith("/") else request.path + "/"
         if path.split("/")[1] == "admin":
             return
 

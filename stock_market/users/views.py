@@ -86,7 +86,7 @@ class TokenRefreshAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
         try:
             user = User.objects.get(id=payload["id"])
         except User.DoesNotExist:
-            return Response(data={"detail": "User does not exist"}, status=404)
+            return Response(data={"detail": "Token is invalid"}, status=400)
 
         token = Token(user)
 
