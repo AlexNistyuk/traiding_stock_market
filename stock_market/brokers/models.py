@@ -4,6 +4,8 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 
+# TODO add constraint and validator for field "count"
+
 
 class InvestmentTypes(models.TextChoices):
     STOCK = ("stock", "stock")

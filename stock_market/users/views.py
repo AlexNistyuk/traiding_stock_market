@@ -57,7 +57,8 @@ class UserViewSet(
         password = serializer.validated_data["password"]
 
         incorrect_response = Response(
-            data={"detail": "Incorrect username or password"}, status=401
+            data={"detail": "Incorrect username or password"},
+            status=status.HTTP_401_UNAUTHORIZED,
         )
 
         try:
@@ -77,16 +78,23 @@ class TokenRefreshAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         refresh_token = request.data.get("refresh_token")
         if not refresh_token:
-            return Response(data={"detail": "Refresh token is missed"}, status=400)
+            return Response(
+                data={"detail": "Refresh token is missed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         payload = Token().get_payload(refresh_token)
         if not payload or payload["type"] != "refresh_token":
-            return Response(data={"detail": "Token is invalid"}, status=400)
+            return Response(
+                data={"detail": "Token is invalid"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             user = User.objects.get(id=payload["id"])
         except User.DoesNotExist:
-            return Response(data={"detail": "Token is invalid"}, status=400)
+            return Response(
+                data={"detail": "Token is invalid"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         token = Token(user)
 
