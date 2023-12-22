@@ -21,8 +21,6 @@ class Token:
     def get_access_token(self):
         access_token_payload = {
             "id": self.user.id,
-            "username": self.user.username,
-            "role": self.user.role,
             "type": "access_token",
             "exp": self.__get_expire_time(
                 timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRES_IN)
@@ -48,7 +46,7 @@ class Token:
 
     def get_payload(self, token: str) -> dict:
         try:
-            return self.jwt.decode(token, JWK, algorithms={JWT_ALGORITHM})
+            return self.jwt.decode(token, JWK, algorithms=[JWT_ALGORITHM])
         except JWTDecodeError:
             return {}
 
