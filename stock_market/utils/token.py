@@ -23,6 +23,7 @@ class Token:
             "id": self.user.id,
             "username": self.user.username,
             "role": self.user.role,
+            "type": "access_token",
             "exp": self.__get_expire_time(
                 timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRES_IN)
             ),
@@ -33,6 +34,7 @@ class Token:
     def get_refresh_token(self) -> str:
         refresh_token_payload = {
             "id": self.user.id,
+            "type": "refresh_token",
             "exp": self.__get_expire_time(timedelta(days=JWT_REFRESH_TOKEN_EXPIRES_IN)),
         }
 
