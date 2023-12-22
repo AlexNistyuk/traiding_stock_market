@@ -75,6 +75,11 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         )
 
 
+class UserLoginSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=30, write_only=True)
+    password = serializers.CharField(max_length=128, write_only=True)
+
+
 class ChangePasswordSerializer(serializers.ModelSerializer):
     old_password = serializers.CharField(max_length=128, required=True, write_only=True)
     new_password = serializers.CharField(max_length=128, required=True, write_only=True)

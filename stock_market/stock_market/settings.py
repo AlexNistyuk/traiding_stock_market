@@ -56,6 +56,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "users.middlewares.JWTAuthMiddleware",
 ]
 
 ROOT_URLCONF = "stock_market.urls"
@@ -142,3 +143,9 @@ AUTH_USER_MODEL = "users.User"
 
 DECIMAL_MAX_DIGITS = env.int("DECIMAL_MAX_DIGITS")
 DECIMAL_PLACES = env.int("DECIMAL_PLACES")
+
+JWT_SECRET_KEY = env.str("JWT_SECRET_KEY")
+JWT_ACCESS_TOKEN_EXPIRES_IN = env.int("JWT_ACCESS_TOKEN_EXPIRES_IN")
+JWT_REFRESH_TOKEN_EXPIRES_IN = env.int("JWT_REFRESH_TOKEN_EXPIRES_IN")
+JWT_ALGORITHM = env.str("JWT_ALGORITHM")
+HTTP_AUTH_KEYWORD = env.str("HTTP_AUTH_KEYWORD")
