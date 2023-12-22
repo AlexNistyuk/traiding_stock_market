@@ -1,4 +1,5 @@
 from rest_framework import generics, mixins, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.models import User
 from users.serializers import (
@@ -24,16 +25,15 @@ class UserViewSet(
         "create": UserCreateSerializer,
         "update": UserUpdateSerializer,
         "partial_update": UserUpdateSerializer,
+        "change_password": ChangePasswordSerializer,
     }
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
 
-
-# TODO: create action for this and include it to UserViewSet
-class UserChangePasswordViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    queryset = User.objects.all()
-    serializer_class = ChangePasswordSerializer
+    @action(detail=False, methods=["post"], url_path="change-password")
+    def change_password(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
 
 
 class TokenAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
