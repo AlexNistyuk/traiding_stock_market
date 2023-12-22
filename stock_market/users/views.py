@@ -83,7 +83,7 @@ class TokenRefreshAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        payload = Token().get_payload(refresh_token)
+        payload = Token.get_payload(refresh_token)
         if not payload or payload["type"] != "refresh_token":
             return Response(
                 data={"detail": "Token is invalid"}, status=status.HTTP_400_BAD_REQUEST

@@ -38,7 +38,7 @@ class JWTAuthMiddleware(MiddlewareMixin):
             return http_response
 
         token = header_list[1]
-        payload = Token().get_payload(token)
+        payload = Token.get_payload(token)
         if not payload:
             return http_response
 

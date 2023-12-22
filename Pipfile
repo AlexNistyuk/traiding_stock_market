@@ -10,7 +10,6 @@ pyjwt = "*"
 pre-commit = "*"
 django-environ = "*"
 psycopg2-binary = "*"
-jwt = "*"
 
 [dev-packages]
 
