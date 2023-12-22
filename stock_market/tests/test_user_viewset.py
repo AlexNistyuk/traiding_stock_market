@@ -6,7 +6,9 @@ from users.factories import UserFactory
 
 class UserViewSetTest(TestCase):
     def setUp(self) -> None:
-        self.path = "/v1/users/"
+        self.list_path = "/v1/users/"
+        self.register_path = self.list_path + "register/"
+        self.login_path = self.list_path + "login/"
         self.fake = Faker()
         self.new_user = UserFactory
 
@@ -14,7 +16,7 @@ class UserViewSetTest(TestCase):
     def test_list_user_ok(self):
         _ = self.new_user()
 
-        response = self.client.get(self.path)
+        response = self.client.get(self.list_path)
 
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.data, list)
@@ -23,7 +25,7 @@ class UserViewSetTest(TestCase):
 
     def test_create_user_ok(self):
         response = self.client.post(
-            path=self.path,
+            path=self.register_path,
             data={
                 "email": self.fake.email(),
                 "username": self.fake.user_name(),
@@ -38,7 +40,7 @@ class UserViewSetTest(TestCase):
         user = self.new_user()
 
         response = self.client.post(
-            path=self.path,
+            path=self.register_path,
             data={
                 "email": user.email,
                 "username": self.fake.user_name(),
@@ -52,7 +54,7 @@ class UserViewSetTest(TestCase):
     def test_retrieve_user_ok(self):
         user = self.new_user()
 
-        response = self.client.get(f"{self.path}{user.pk}/")
+        response = self.client.get(f"{self.list_path}{user.pk}/")
 
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.data, dict)
@@ -71,7 +73,7 @@ class UserViewSetTest(TestCase):
         balance = f"{self.fake.pyint():.2f}"
 
         response = self.client.put(
-            path=f"{self.path}{user.pk}/",
+            path=f"{self.list_path}{user.pk}/",
             data={
                 "is_blocked": is_blocked,
                 "balance": balance,
@@ -91,7 +93,7 @@ class UserViewSetTest(TestCase):
         balance = f"{-self.fake.pyint():.2f}"
 
         response = self.client.put(
-            path=f"{self.path}{user.pk}/",
+            path=f"{self.list_path}{user.pk}/",
             data={
                 "balance": balance,
             },

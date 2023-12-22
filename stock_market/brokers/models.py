@@ -4,8 +4,6 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 
-# TODO add constraint and validator for field "count"
-
 
 class InvestmentTypes(models.TextChoices):
     STOCK = ("stock", "stock")
@@ -55,7 +53,7 @@ class Investment(models.Model):
 
 
 class Order(models.Model):
-    count = models.PositiveIntegerField(default=0)
+    count = models.IntegerField(validators=[MinValueValidator(1)])
     status = models.CharField(
         choices=OrderStatuses.choices, default=OrderStatuses.ACTIVE
     )
@@ -73,6 +71,12 @@ class MarketOrder(Order):
     class Meta:
         db_table = "market_order"
         ordering = ["created_at"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(count__gte=1),
+                name="market_order_count_greater_than_0",
+            ),
+        ]
 
 
 class LimitOrder(Order):
@@ -93,6 +97,10 @@ class LimitOrder(Order):
             models.CheckConstraint(
                 check=models.Q(price__gte=Decimal("0")),
                 name="limit_order_price_non_negative",
+            ),
+            models.CheckConstraint(
+                check=models.Q(count__gte=1),
+                name="limit_order_count_greater_than_0",
             ),
         ]
 
@@ -124,7 +132,7 @@ class InvestmentPortfolio(models.Model):
 
 
 class Trade(models.Model):
-    count = models.PositiveIntegerField(default=0)
+    count = models.IntegerField(validators=[MinValueValidator(1)])
     price = models.DecimalField(
         null=False,
         max_digits=settings.DECIMAL_MAX_DIGITS,
@@ -146,6 +154,10 @@ class Trade(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=models.Q(price__gte=Decimal("0")), name="trade_price_non_negative"
+            ),
+            models.CheckConstraint(
+                check=models.Q(count__gte=1),
+                name="trade_count_greater_than_0",
             ),
         ]
 
