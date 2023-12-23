@@ -8,11 +8,11 @@ class InvestmentPortfolioViewSetTest(TestCase):
     def setUp(self) -> None:
         self.path = "/v1/portfolios/"
         self.fake = Faker()
-        self.new_porfolio = InvestmentPortfolioFactory
+        self.new_portfolio = InvestmentPortfolioFactory
 
     # TODO: create list portfolio negative using permissions
     def test_list_portfolio_ok(self):
-        _ = self.new_porfolio()
+        _ = self.new_portfolio()
 
         response = self.client.get(self.path)
 
@@ -58,7 +58,7 @@ class InvestmentPortfolioViewSetTest(TestCase):
 
     # TODO: create retrieve negative using permissions
     def test_retrieve_portfolio_ok(self):
-        portfolio = self.new_porfolio()
+        portfolio = self.new_portfolio()
         path = f"{self.path}{portfolio.id}/"
 
         response = self.client.get(path)
@@ -68,7 +68,7 @@ class InvestmentPortfolioViewSetTest(TestCase):
         self.assertEqual(response.data["id"], portfolio.id)
 
     def test_update_portfolio_ok(self):
-        portfolio = self.new_porfolio()
+        portfolio = self.new_portfolio()
         path = f"{self.path}{portfolio.id}/"
 
         response = self.client.put(
@@ -84,7 +84,7 @@ class InvestmentPortfolioViewSetTest(TestCase):
         self.assertEqual(response.data["id"], portfolio.id)
 
     def test_update_portfolio_with_negative_quantity(self):
-        portfolio = self.new_porfolio()
+        portfolio = self.new_portfolio()
         path = f"{self.path}{portfolio.id}/"
 
         response = self.client.put(
@@ -98,7 +98,7 @@ class InvestmentPortfolioViewSetTest(TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_update_portfolio_quantity_ok(self):
-        portfolio = self.new_porfolio()
+        portfolio = self.new_portfolio()
         portfolio.spend_amount = 0
         portfolio.quantity = 0
         portfolio.save()
