@@ -40,7 +40,7 @@ class TradeViewSetTest(TestCase):
         response = self.client.put(
             path=path,
             data={
-                "count": self.fake.pyint(),
+                "quantity": self.fake.pyint(),
                 "seller": trade.seller.id,
                 "buyer": trade.buyer.id,
                 "investment": trade.investment.id,
@@ -59,7 +59,7 @@ class TradeViewSetTest(TestCase):
         response = self.client.put(
             path=path,
             data={
-                "count": -self.fake.pyint(),
+                "quantity": -self.fake.pyint(),
                 "seller": trade.seller.id,
                 "buyer": trade.buyer.id,
                 "investment": trade.investment.id,

@@ -17,7 +17,7 @@ class InvestmentCreateSerializer(serializers.ModelSerializer):
             "name",
             "image",
             "price",
-            "count",
+            "quantity",
             "type",
             "created_at",
             "updated_at",
@@ -37,7 +37,7 @@ class InvestmentRetrieveSerializer(serializers.ModelSerializer):
             "name",
             "image",
             "price",
-            "count",
+            "quantity",
             "type",
             "created_at",
             "updated_at",
@@ -52,7 +52,7 @@ class InvestmentUpdateSerializer(serializers.ModelSerializer):
             "name",
             "image",
             "price",
-            "count",
+            "quantity",
             "type",
             "created_at",
             "updated_at",
@@ -69,7 +69,7 @@ class MarketOrderCreateSerializer(serializers.ModelSerializer):
         model = MarketOrder
         fields = (
             "id",
-            "count",
+            "quantity",
             "status",
             "is_sell",
             "portfolio",
@@ -91,7 +91,7 @@ class MarketOrderRetrieveSerializer(serializers.ModelSerializer):
         model = MarketOrder
         fields = (
             "id",
-            "count",
+            "quantity",
             "status",
             "is_sell",
             "portfolio",
@@ -106,7 +106,7 @@ class MarketOrderUpdateSerializer(serializers.ModelSerializer):
         model = MarketOrder
         fields = (
             "id",
-            "count",
+            "quantity",
             "status",
             "is_sell",
             "portfolio",
@@ -116,6 +116,7 @@ class MarketOrderUpdateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
+            "portfolio",
             "investment",
             "created_at",
             "updated_at",
@@ -129,7 +130,7 @@ class LimitOrderCreateSerializer(serializers.ModelSerializer):
             "id",
             "price",
             "activated_status",
-            "count",
+            "quantity",
             "status",
             "is_sell",
             "portfolio",
@@ -153,7 +154,7 @@ class LimitOrderRetrieveSerializer(serializers.ModelSerializer):
             "id",
             "price",
             "activated_status",
-            "count",
+            "quantity",
             "status",
             "is_sell",
             "portfolio",
@@ -170,7 +171,7 @@ class LimitOrderUpdateSerializer(serializers.ModelSerializer):
             "id",
             "price",
             "activated_status",
-            "count",
+            "quantity",
             "status",
             "is_sell",
             "portfolio",
@@ -180,6 +181,7 @@ class LimitOrderUpdateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
+            "portfolio",
             "investment",
             "created_at",
             "updated_at",
@@ -191,7 +193,7 @@ class InvestmentPortfolioCreateSerializer(serializers.ModelSerializer):
         model = InvestmentPortfolio
         fields = (
             "id",
-            "count",
+            "quantity",
             "spend_amount",
             "owner",
             "investment",
@@ -211,7 +213,7 @@ class InvestmentPortfolioRetrieveSerializer(serializers.ModelSerializer):
         model = InvestmentPortfolio
         fields = (
             "id",
-            "count",
+            "quantity",
             "spend_amount",
             "owner",
             "investment",
@@ -225,7 +227,7 @@ class InvestmentPortfolioUpdateSerializer(serializers.ModelSerializer):
         model = InvestmentPortfolio
         fields = (
             "id",
-            "count",
+            "quantity",
             "spend_amount",
             "owner",
             "investment",
@@ -234,6 +236,8 @@ class InvestmentPortfolioUpdateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
+            "investment",
+            "owner",
             "spend_amount",
             "created_at",
             "updated_at",
@@ -245,7 +249,7 @@ class TradeCreateSerializer(serializers.ModelSerializer):
         model = Trade
         fields = (
             "id",
-            "count",
+            "quantity",
             "price",
             "seller",
             "buyer",
@@ -264,7 +268,7 @@ class TradeRetrieveSerializer(serializers.ModelSerializer):
         model = Trade
         fields = (
             "id",
-            "count",
+            "quantity",
             "price",
             "seller",
             "buyer",
@@ -278,7 +282,7 @@ class TradeUpdateSerializer(serializers.ModelSerializer):
         model = Trade
         fields = (
             "id",
-            "count",
+            "quantity",
             "price",
             "seller",
             "buyer",

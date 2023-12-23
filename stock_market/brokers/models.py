@@ -34,7 +34,7 @@ class Investment(models.Model):
         decimal_places=settings.DECIMAL_PLACES,
         validators=[MinValueValidator(Decimal("0"))],
     )
-    count = models.PositiveIntegerField(default=0)
+    quantity = models.PositiveIntegerField(default=0)
     type = models.CharField(choices=InvestmentTypes.choices, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -53,7 +53,7 @@ class Investment(models.Model):
 
 
 class Order(models.Model):
-    count = models.IntegerField(validators=[MinValueValidator(1)])
+    quantity = models.IntegerField(validators=[MinValueValidator(1)])
     status = models.CharField(
         choices=OrderStatuses.choices, default=OrderStatuses.ACTIVE
     )
@@ -73,8 +73,8 @@ class MarketOrder(Order):
         ordering = ["created_at"]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(count__gte=1),
-                name="market_order_count_greater_than_0",
+                check=models.Q(quantity__gte=1),
+                name="market_order_quantity_greater_than_0",
             ),
         ]
 
@@ -99,14 +99,14 @@ class LimitOrder(Order):
                 name="limit_order_price_non_negative",
             ),
             models.CheckConstraint(
-                check=models.Q(count__gte=1),
-                name="limit_order_count_greater_than_0",
+                check=models.Q(quantity__gte=1),
+                name="limit_order_quantity_greater_than_0",
             ),
         ]
 
 
 class InvestmentPortfolio(models.Model):
-    count = models.PositiveIntegerField(default=0)
+    quantity = models.PositiveIntegerField(default=0)
     spend_amount = models.DecimalField(
         null=False,
         max_digits=settings.DECIMAL_MAX_DIGITS,
@@ -122,7 +122,7 @@ class InvestmentPortfolio(models.Model):
 
     class Meta:
         db_table = "investment_portfolio"
-        ordering = ["-count"]
+        ordering = ["-quantity"]
         unique_together = ("owner", "investment")
         constraints = [
             models.CheckConstraint(
@@ -133,7 +133,7 @@ class InvestmentPortfolio(models.Model):
 
 
 class Trade(models.Model):
-    count = models.IntegerField(validators=[MinValueValidator(1)])
+    quantity = models.IntegerField(validators=[MinValueValidator(1)])
     price = models.DecimalField(
         null=False,
         max_digits=settings.DECIMAL_MAX_DIGITS,
@@ -157,8 +157,8 @@ class Trade(models.Model):
                 check=models.Q(price__gte=Decimal("0")), name="trade_price_non_negative"
             ),
             models.CheckConstraint(
-                check=models.Q(count__gte=1),
-                name="trade_count_greater_than_0",
+                check=models.Q(quantity__gte=1),
+                name="trade_quantity_greater_than_0",
             ),
         ]
 

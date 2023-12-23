@@ -92,7 +92,7 @@ class RecommendationViewSetTest(TestCase):
         response = self.client.put(
             path=path,
             data={
-                "count": -self.fake.pyint(),
+                "quantity": -self.fake.pyint(),
                 "investment": recommendation_1.investment.id,
             },
             content_type="application/json",

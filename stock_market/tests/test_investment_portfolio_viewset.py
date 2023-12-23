@@ -38,9 +38,7 @@ class InvestmentPortfolioViewSetTest(TestCase):
         response = self.client.put(
             path=path,
             data={
-                "count": self.fake.pyint(),
-                "owner": portfolio.owner.id,
-                "investment": portfolio.investment.id,
+                "quantity": self.fake.pyint(),
             },
             content_type="application/json",
         )
@@ -56,9 +54,7 @@ class InvestmentPortfolioViewSetTest(TestCase):
         response = self.client.put(
             path=path,
             data={
-                "count": -self.fake.pyint(),
-                "owner": portfolio.owner.id,
-                "investment": portfolio.investment.id,
+                "quantity": -self.fake.pyint(),
             },
             content_type="application/json",
         )

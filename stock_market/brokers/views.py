@@ -26,9 +26,14 @@ from brokers.serializers import (
     TradeRetrieveSerializer,
     TradeUpdateSerializer,
 )
+from django.http import Http404
 from rest_framework import mixins, status, viewsets
 from rest_framework.response import Response
-from utils.managers import InvestmentPortfolioManager
+from utils.managers import (
+    InvestmentPortfolioManager,
+    LimitOrderManager,
+    MarketOrderManager,
+)
 
 
 class InvestmentViewSet(
@@ -70,6 +75,27 @@ class MarketOrderViewSet(
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = MarketOrderManager(serializer.validated_data).create()
+
+        return Response(
+            self.get_serializer(instance).data, status=status.HTTP_201_CREATED
+        )
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = self.get_object()
+        instance = MarketOrderManager(
+            serializer.validated_data, instance=instance
+        ).update()
+
+        return Response(self.get_serializer(instance).data, status=status.HTTP_200_OK)
+
 
 class LimitOrderViewSet(
     mixins.ListModelMixin,
@@ -89,6 +115,27 @@ class LimitOrderViewSet(
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = LimitOrderManager(serializer.validated_data).create()
+
+        return Response(
+            self.get_serializer(instance).data, status=status.HTTP_201_CREATED
+        )
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = self.get_object()
+        instance = LimitOrderManager(
+            serializer.validated_data, instance=instance
+        ).update()
+
+        return Response(self.get_serializer(instance).data, status=status.HTTP_200_OK)
 
 
 class InvestmentPortfolioViewSet(
@@ -110,6 +157,18 @@ class InvestmentPortfolioViewSet(
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
 
+    def get_object(self):
+        try:
+            instance = InvestmentPortfolio.objects.select_related(
+                "owner", "investment"
+            ).get(pk=self.kwargs["pk"])
+        except InvestmentPortfolio.DoesNotExist:
+            raise Http404
+
+        self.check_object_permissions(self.request, instance)
+
+        return instance
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -122,11 +181,12 @@ class InvestmentPortfolioViewSet(
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=False)
+        serializer.is_valid(raise_exception=True)
 
-        instance = InvestmentPortfolioManager(serializer.validated_data).update(
-            serializer.instance
-        )
+        instance = self.get_object()
+        instance = InvestmentPortfolioManager(
+            serializer.validated_data, instance=instance
+        ).update()
 
         return Response(self.get_serializer(instance).data, status=status.HTTP_200_OK)
 

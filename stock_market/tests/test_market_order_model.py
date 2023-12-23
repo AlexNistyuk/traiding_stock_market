@@ -20,12 +20,12 @@ class MarketOrderModelTest(TestCase):
         self.assertEqual(order_count + 1, self.order_count())
         self.assertIsInstance(order, MarketOrder)
 
-    def test_update_order_with_negative_count(self):
+    def test_update_order_with_negative_quantity(self):
         order_count = self.order_count()
 
         order = self.new_order()
 
-        order.count = -self.fake.pyint()
+        order.quantity = -self.fake.pyint()
 
         self.assertEqual(order_count + 1, self.order_count())
         self.assertRaises(IntegrityError, order.save)

@@ -41,7 +41,7 @@ class MarketOrderViewSetTest(TestCase):
         response = self.client.put(
             path=path,
             data={
-                "count": self.fake.pyint(),
+                "quantity": self.fake.pyint(),
                 "status": self.fake.random_choices(elements=OrderStatuses.choices)[0][
                     0
                 ],
@@ -62,7 +62,7 @@ class MarketOrderViewSetTest(TestCase):
         response = self.client.put(
             path=path,
             data={
-                "count": -self.fake.pyint(),
+                "quantity": -self.fake.pyint(),
                 "status": self.fake.random_choices(elements=OrderStatuses.choices)[0][
                     0
                 ],
@@ -81,7 +81,7 @@ class MarketOrderViewSetTest(TestCase):
         response = self.client.put(
             path=path,
             data={
-                "count": -self.fake.pyint(),
+                "quantity": -self.fake.pyint(),
                 "status": self.fake.name(),
                 "is_sell": False,
                 "portfolio": order.portfolio.id,

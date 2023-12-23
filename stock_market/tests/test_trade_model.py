@@ -30,12 +30,12 @@ class TradeModelTest(TestCase):
         self.assertEqual(trade_count + 1, self.trade_count())
         self.assertRaises(IntegrityError, trade.save)
 
-    def test_update_trade_with_negative_count(self):
+    def test_update_trade_with_negative_quantity(self):
         trade_count = self.trade_count()
 
         trade = self.new_trade()
 
-        trade.count = -self.fake.pyint()
+        trade.quantity = -self.fake.pyint()
 
         self.assertEqual(trade_count + 1, self.trade_count())
         self.assertRaises(IntegrityError, trade.save)
