@@ -123,6 +123,7 @@ class InvestmentPortfolio(models.Model):
     class Meta:
         db_table = "investment_portfolio"
         ordering = ["-count"]
+        unique_together = ("owner", "investment")
         constraints = [
             models.CheckConstraint(
                 check=models.Q(spend_amount__gte=Decimal("0")),

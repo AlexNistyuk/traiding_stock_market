@@ -26,7 +26,9 @@ from brokers.serializers import (
     TradeRetrieveSerializer,
     TradeUpdateSerializer,
 )
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
+from rest_framework.response import Response
+from utils.managers import InvestmentPortfolioManager
 
 
 class InvestmentViewSet(
@@ -107,6 +109,26 @@ class InvestmentPortfolioViewSet(
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = InvestmentPortfolioManager(serializer.validated_data).create()
+
+        return Response(
+            self.get_serializer(instance).data, status=status.HTTP_201_CREATED
+        )
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=False)
+
+        instance = InvestmentPortfolioManager(serializer.validated_data).update(
+            serializer.instance
+        )
+
+        return Response(self.get_serializer(instance).data, status=status.HTTP_200_OK)
 
 
 class TradeViewSet(
