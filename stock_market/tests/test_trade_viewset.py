@@ -52,7 +52,7 @@ class TradeViewSetTest(TestCase):
         self.assertIsInstance(response.data, dict)
         self.assertEqual(response.data["id"], trade.id)
 
-    def test_update_trade_with_negative_count(self):
+    def test_update_trade_with_negative_quantity(self):
         trade = self.new_trade()
         path = f"{self.path}{trade.id}/"
 

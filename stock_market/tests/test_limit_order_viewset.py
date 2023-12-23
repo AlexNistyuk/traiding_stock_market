@@ -133,7 +133,7 @@ class LimitOrderViewSetTest(TestCase):
         self.assertIsInstance(response.data, dict)
         self.assertEqual(response.data["id"], order.id)
 
-    def test_update_order_with_negative_count(self):
+    def test_update_order_with_negative_quantity(self):
         order = self.new_order()
         path = f"{self.path}{order.id}/"
 

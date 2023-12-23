@@ -40,7 +40,7 @@ class InvestmentPortfolioModelTest(TestCase):
         self.assertEqual(portfolio_count + 1, self.portfolio_count())
         self.assertRaises(IntegrityError, portfolio.save)
 
-    def test_portfolio_count_desc_ordering(self):
+    def test_portfolio_quantity_desc_ordering(self):
         portfolio_count = self.portfolio_count()
 
         portfolio_1 = self.new_portfolio()
