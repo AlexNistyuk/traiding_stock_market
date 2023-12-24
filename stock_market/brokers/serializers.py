@@ -260,6 +260,7 @@ class TradeCreateSerializer(serializers.ModelSerializer):
         read_only_fields = (
             "created_at",
             "price",
+            "investment",
         )
 
 
@@ -290,7 +291,7 @@ class TradeUpdateSerializer(serializers.ModelSerializer):
             "created_at",
         )
 
-        read_only_fields = ("created_at", "price")
+        read_only_fields = ("created_at", "price", "investment")
 
 
 class RecommendationCreateSerializer(serializers.ModelSerializer):

@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import F
 
 
 class InvestmentTypes(models.TextChoices):
@@ -159,6 +160,10 @@ class Trade(models.Model):
             models.CheckConstraint(
                 check=models.Q(quantity__gte=1),
                 name="trade_quantity_greater_than_0",
+            ),
+            models.CheckConstraint(
+                check=~models.Q(seller=F("buyer")),
+                name="trade_seller_not_equal_buyer",
             ),
         ]
 

@@ -1,13 +1,11 @@
 import abc
 
-from brokers.models import InvestmentPortfolio, LimitOrder, MarketOrder
+from brokers.models import InvestmentPortfolio, LimitOrder, MarketOrder, Trade
 from django.db import IntegrityError, transaction
 from utils.exceptions import Http400
 
 
 class IManager(abc.ABC):
-    model = None
-
     def __init__(self, validated_data: dict, instance=None):
         self.data = validated_data
         self.instance = instance
@@ -22,14 +20,12 @@ class IManager(abc.ABC):
 
 
 class InvestmentPortfolioManager(IManager):
-    model = InvestmentPortfolio
-
     def create(self):
         self.data["spend_amount"] = (
             self.data["investment"].price * self.data["quantity"]
         )
 
-        return self.model.objects.create(**self.data)
+        return InvestmentPortfolio.objects.create(**self.data)
 
     def update(self):
         count_difference = self.data["quantity"] - self.instance.quantity
@@ -45,6 +41,8 @@ class InvestmentPortfolioManager(IManager):
 
 
 class OrderManager(IManager):
+    model = None
+
     def create(self):
         portfolio = self.data["portfolio"]
         self.data["investment"] = portfolio.investment
@@ -64,7 +62,11 @@ class OrderManager(IManager):
             portfolio.save()
         except IntegrityError:
             raise Http400(
-                {"detail": "The portfolio does not have the required quantity to sell"}
+                {
+                    "detail": [
+                        "The portfolio does not have the required quantity to sell"
+                    ]
+                }
             )
 
     def get_quantity_difference(self) -> int:
@@ -111,3 +113,39 @@ class LimitOrderManager(OrderManager):
             self.instance.save()
 
             return self.instance
+
+
+class TradeManager(IManager):
+    def create(self):
+        self.__check_data()
+
+        self.data["investment"] = self.data["buyer"].investment
+        self.data["price"] = self.data["investment"].price
+
+        return Trade.objects.create(**self.data)
+
+    def update(self):
+        self.__check_data()
+
+        self.instance.quantity = self.data["quantity"]
+        self.instance.seller = self.data["seller"]
+        self.instance.buyer = self.data["buyer"]
+        self.instance.investment = self.data["buyer"].investment
+        self.instance.price = self.instance.investment.price
+        self.instance.save()
+
+        return self.instance
+
+    def __check_data(self):
+        self.__check_seller_equal_buyer()
+        self.__check_equal_investments()
+
+    def __check_seller_equal_buyer(self):
+        if self.data["seller"] == self.data["buyer"]:
+            raise Http400({"seller": "Seller and buyer must not be the same"})
+
+    def __check_equal_investments(self):
+        if self.data["seller"].investment != self.data["buyer"].investment:
+            raise Http400(
+                {"investment": ["Seller and buyer investments must be the same"]}
+            )

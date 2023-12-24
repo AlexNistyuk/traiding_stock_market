@@ -33,6 +33,7 @@ from utils.managers import (
     InvestmentPortfolioManager,
     LimitOrderManager,
     MarketOrderManager,
+    TradeManager,
 )
 
 
@@ -209,6 +210,37 @@ class TradeViewSet(
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
+
+    def get_object(self):
+        try:
+            instance = Trade.objects.select_related(
+                "buyer", "seller", "investment"
+            ).get(pk=self.kwargs["pk"])
+        except Trade.DoesNotExist:
+            raise Http404
+
+        self.check_object_permissions(self.request, instance)
+
+        return instance
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = TradeManager(serializer.validated_data).create()
+
+        return Response(
+            self.get_serializer(instance).data, status=status.HTTP_201_CREATED
+        )
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = self.get_object()
+        instance = TradeManager(serializer.validated_data, instance=instance).update()
+
+        return Response(self.get_serializer(instance).data, status=status.HTTP_200_OK)
 
 
 class RecommendationViewSet(
