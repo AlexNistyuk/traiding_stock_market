@@ -30,28 +30,31 @@ class UserManager(BaseUserManager):
 
         return user
 
-    def create_user(self, email, username, password):
+    def create_user(self, email, username, password, image=None):
         return self._create_user(
             email=email,
             username=username,
             password=password,
             role=Roles.USER,
+            image=image,
         )
 
-    def create_superuser(self, email, password, username):
+    def create_superuser(self, email, password, username, image=None):
         return self._create_user(
             email=email,
             username=username,
             password=password,
             role=Roles.ADMIN,
+            image=image,
         )
 
-    def create_analyst(self, email, password, username):
+    def create_analyst(self, email, password, username, image=None):
         return self._create_user(
             email=email,
             username=username,
             password=password,
             role=Roles.ANALYST,
+            image=image,
         )
 
 

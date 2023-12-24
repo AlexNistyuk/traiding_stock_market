@@ -2,6 +2,7 @@ import abc
 
 from brokers.models import InvestmentPortfolio, LimitOrder, MarketOrder, Trade
 from django.db import IntegrityError, transaction
+from users.models import User
 from utils.exceptions import Http400
 
 
@@ -17,6 +18,19 @@ class IManager(abc.ABC):
     @abc.abstractmethod
     def update(self):
         ...
+
+
+class UserManager(IManager):
+    def create(self):
+        return User.objects.create_user(**self.data)
+
+    def update(self):
+        self.instance.is_blocked = self.data["is_blocked"]
+        self.instance.balance = self.data["balance"]
+        self.instance.subscriptions.set(self.data["subscriptions"])
+        self.instance.save()
+
+        return self.instance
 
 
 class InvestmentPortfolioManager(IManager):

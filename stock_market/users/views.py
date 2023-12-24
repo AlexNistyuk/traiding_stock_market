@@ -9,6 +9,7 @@ from users.serializers import (
     UserRetrieveSerializer,
     UserUpdateSerializer,
 )
+from utils.managers import UserManager
 from utils.token import Token
 
 
@@ -32,13 +33,25 @@ class UserViewSet(
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
 
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = self.get_object()
+        instance = UserManager(serializer.validated_data, instance=instance).update()
+
+        return Response(self.get_serializer(instance).data, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=["post"], url_path="register")
     def register(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        instance = UserManager(serializer.validated_data).create()
+
+        return Response(
+            self.get_serializer(instance).data, status=status.HTTP_201_CREATED
+        )
 
     @action(detail=False, methods=["post"], url_path="change-password")
     def change_password(self, request, *args, **kwargs):
