@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group
 from users.models import User
 
 
-class UserCreationForm(forms.ModelForm):
+class UserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = (
@@ -20,30 +20,7 @@ class UserCreationForm(forms.ModelForm):
         )
 
     def save(self, commit=True):
-        user = super(UserCreationForm, self).save(commit=False)
-        user.set_password(self.cleaned_data["password"])
-        if commit:
-            user.save()
-
-        return user
-
-
-class UserChangeForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = (
-            "email",
-            "username",
-            "password",
-            "role",
-            "image",
-            "is_blocked",
-            "balance",
-            "subscriptions",
-        )
-
-    def save(self, commit=True):
-        user = super(UserChangeForm, self).save(commit=False)
+        user = super(UserForm, self).save(commit=False)
         user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
@@ -52,8 +29,8 @@ class UserChangeForm(forms.ModelForm):
 
 
 class UserAdmin(BaseUserAdmin):
-    form = UserChangeForm
-    add_form = UserCreationForm
+    form = UserForm
+    add_form = UserForm
     list_display = (
         "email",
         "username",
