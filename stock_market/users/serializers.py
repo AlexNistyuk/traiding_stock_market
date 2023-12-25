@@ -75,6 +75,12 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         )
 
 
+class UserSubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("subscriptions",)
+
+
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=30, write_only=True)
     password = serializers.CharField(max_length=128, write_only=True)

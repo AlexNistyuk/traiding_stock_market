@@ -39,6 +39,13 @@ class UserService(IService):
         user.set_password(self.data["new_password"])
         user.save()
 
+    def set_subscriptions(self, user):
+        try:
+            user.subscriptions.set(self.data["subscriptions"])
+            user.save()
+        except KeyError:
+            raise Http400({"detail": "'subscriptions' is not provided"})
+
 
 class InvestmentPortfolioService(IService):
     def create(self):

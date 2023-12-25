@@ -8,6 +8,7 @@ from users.serializers import (
     UserCreateSerializer,
     UserLoginSerializer,
     UserRetrieveSerializer,
+    UserSubscriptionSerializer,
     UserUpdateSerializer,
 )
 from utils.services import UserService
@@ -29,6 +30,7 @@ class UserViewSet(
         "change_password": ChangePasswordSerializer,
         "register": UserCreateSerializer,
         "login": UserLoginSerializer,
+        "set_subscription": UserSubscriptionSerializer,
     }
     permission_action_classes = {
         "retrieve": [IsAdmin],
@@ -99,6 +101,17 @@ class UserViewSet(
         token = Token(user)
 
         return Response(data=token.get_tokens(), status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["post"], url_path="subscription")
+    def set_subscription(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        UserService(serializer.validated_data).set_subscriptions(request.jwt_user)
+
+        return Response(
+            data={"detail": "Successfully set subscriptions"}, status=status.HTTP_200_OK
+        )
 
 
 class TokenRefreshAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
