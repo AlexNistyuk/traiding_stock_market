@@ -15,15 +15,13 @@ class JWTAuthMiddleware(MiddlewareMixin):
     }
 
     def process_request(self, request):
-        # path = request.path if request.path.endswith("/") else request.path + "/"
-        # if path.split("/")[1] == "admin":
-        #     return
-        #
-        # if path.split("/")[3] in self.anonymous_urls:
-        #     return
-        # return self.__get_user(request)
+        path = request.path if request.path.endswith("/") else request.path + "/"
+        if path.split("/")[1] == "admin":
+            return
 
-        return
+        if path.split("/")[3] in self.anonymous_urls:
+            return
+        return self.__get_user(request)
 
     @staticmethod
     def __get_user(request):

@@ -6,7 +6,7 @@ from users.models import User
 from utils.exceptions import Http400
 
 
-class IManager(abc.ABC):
+class IService(abc.ABC):
     def __init__(self, validated_data: dict, instance=None):
         self.data = validated_data
         self.instance = instance
@@ -20,20 +20,27 @@ class IManager(abc.ABC):
         ...
 
 
-class UserManager(IManager):
+class UserService(IService):
     def create(self):
         return User.objects.create_user(**self.data)
 
     def update(self):
-        self.instance.is_blocked = self.data["is_blocked"]
-        self.instance.balance = self.data["balance"]
-        self.instance.subscriptions.set(self.data["subscriptions"])
-        self.instance.save()
+        try:
+            self.instance.is_blocked = self.data["is_blocked"]
+            self.instance.balance = self.data["balance"]
+            self.instance.subscriptions.set(self.data["subscriptions"])
+            self.instance.save()
 
-        return self.instance
+            return self.instance
+        except KeyError as exc:
+            raise Http400({"detail": [f"{exc} is not provided"]})
+
+    def change_password(self, user):
+        user.set_password(self.data["new_password"])
+        user.save()
 
 
-class InvestmentPortfolioManager(IManager):
+class InvestmentPortfolioService(IService):
     def create(self):
         self.data["spend_amount"] = (
             self.data["investment"].price * self.data["quantity"]
@@ -54,7 +61,7 @@ class InvestmentPortfolioManager(IManager):
         return self.instance
 
 
-class OrderManager(IManager):
+class OrderService(IService):
     model = None
 
     def create(self):
@@ -84,6 +91,9 @@ class OrderManager(IManager):
             )
 
     def get_quantity_difference(self) -> int:
+        if "is_sell" not in self.data:
+            raise Http400({"detail": ["'is_sell' is not provided"]})
+
         if self.instance is None:
             return -self.data["quantity"] if self.data["is_sell"] else 0
 
@@ -97,7 +107,7 @@ class OrderManager(IManager):
         return 0
 
 
-class MarketOrderManager(OrderManager):
+class MarketOrderService(OrderService):
     model = MarketOrder
 
     def update(self):
@@ -112,7 +122,7 @@ class MarketOrderManager(OrderManager):
             return self.instance
 
 
-class LimitOrderManager(OrderManager):
+class LimitOrderService(OrderService):
     model = LimitOrder
 
     def update(self):
@@ -129,7 +139,7 @@ class LimitOrderManager(OrderManager):
             return self.instance
 
 
-class TradeManager(IManager):
+class TradeService(IService):
     def create(self):
         self.__check_data()
 

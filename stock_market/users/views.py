@@ -2,6 +2,7 @@ from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.models import User
+from users.permissions import IsAdmin
 from users.serializers import (
     ChangePasswordSerializer,
     UserCreateSerializer,
@@ -9,7 +10,7 @@ from users.serializers import (
     UserRetrieveSerializer,
     UserUpdateSerializer,
 )
-from utils.managers import UserManager
+from utils.services import UserService
 from utils.token import Token
 
 
@@ -29,6 +30,16 @@ class UserViewSet(
         "register": UserCreateSerializer,
         "login": UserLoginSerializer,
     }
+    permission_action_classes = {
+        "retrieve": [IsAdmin],
+        "list": [IsAdmin],
+        "update": [IsAdmin],
+        "partial_update": [IsAdmin],
+    }
+
+    @property
+    def permission_classes(self):
+        return self.permission_action_classes.get(self.action, [])
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
@@ -38,7 +49,7 @@ class UserViewSet(
         serializer.is_valid(raise_exception=True)
 
         instance = self.get_object()
-        instance = UserManager(serializer.validated_data, instance=instance).update()
+        instance = UserService(serializer.validated_data, instance=instance).update()
 
         return Response(self.get_serializer(instance).data, status=status.HTTP_200_OK)
 
@@ -47,7 +58,7 @@ class UserViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        instance = UserManager(serializer.validated_data).create()
+        instance = UserService(serializer.validated_data).create()
 
         return Response(
             self.get_serializer(instance).data, status=status.HTTP_201_CREATED
@@ -57,9 +68,12 @@ class UserViewSet(
     def change_password(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        UserService(serializer.validated_data).change_password(request.jwt_user)
+
+        return Response(
+            data={"detail": "Successfully changed password"}, status=status.HTTP_200_OK
+        )
 
     @action(detail=False, methods=["post"], url_path="login")
     def login(self, request, *args, **kwargs):

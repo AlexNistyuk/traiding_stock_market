@@ -91,13 +91,6 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         model = User
         fields = ("old_password", "new_password", "new_repeated_password")
 
-    def create(self, validated_data):
-        user = self.context["request"].user
-        user.set_password(validated_data["new_password"])
-        user.save()
-
-        return user
-
     def validate(self, attrs):
         if attrs["new_password"] != attrs["new_repeated_password"]:
             raise serializers.ValidationError(
@@ -107,7 +100,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         return attrs
 
     def validate_old_password(self, password):
-        user = self.context["request"].user
+        user = self.context["request"].jwt_user
         if not user.check_password(password):
             raise serializers.ValidationError(
                 {"old_password": "Old password is incorrect!"}

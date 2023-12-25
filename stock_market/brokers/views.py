@@ -6,6 +6,7 @@ from brokers.models import (
     Recommendation,
     Trade,
 )
+from brokers.permissions import IsBuyerOrSeller, IsOrderOwner
 from brokers.serializers import (
     InvestmentCreateSerializer,
     InvestmentPortfolioCreateSerializer,
@@ -29,11 +30,12 @@ from brokers.serializers import (
 from django.http import Http404
 from rest_framework import mixins, status, viewsets
 from rest_framework.response import Response
-from utils.managers import (
-    InvestmentPortfolioManager,
-    LimitOrderManager,
-    MarketOrderManager,
-    TradeManager,
+from users.permissions import IsAdmin, IsAnalyst, IsOwner
+from utils.services import (
+    InvestmentPortfolioService,
+    LimitOrderService,
+    MarketOrderService,
+    TradeService,
 )
 
 
@@ -52,6 +54,15 @@ class InvestmentViewSet(
         "update": InvestmentUpdateSerializer,
         "partial_update": InvestmentUpdateSerializer,
     }
+    permission_action_classes = {
+        "create": [IsAdmin],
+        "update": [IsAdmin],
+        "partial_update": [IsAdmin],
+    }
+
+    @property
+    def permission_classes(self):
+        return self.permission_action_classes.get(self.action, [])
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
@@ -72,6 +83,28 @@ class MarketOrderViewSet(
         "update": MarketOrderUpdateSerializer,
         "partial_update": MarketOrderUpdateSerializer,
     }
+    permission_action_classes = {
+        "list": [IsAdmin | IsAnalyst],
+        "retrieve": [IsAdmin | IsAnalyst],
+        "update": [IsAdmin],
+        "partial_update": [IsAdmin],
+    }
+
+    def get_object(self):
+        try:
+            instance = MarketOrder.objects.select_related(
+                "portfolio", "investment"
+            ).get(pk=self.kwargs["pk"])
+        except MarketOrder.DoesNotExist:
+            raise Http404
+
+        self.check_object_permissions(self.request, instance)
+
+        return instance
+
+    @property
+    def permission_classes(self):
+        return self.permission_action_classes.get(self.action, [])
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
@@ -80,7 +113,7 @@ class MarketOrderViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        instance = MarketOrderManager(serializer.validated_data).create()
+        instance = MarketOrderService(serializer.validated_data).create()
 
         return Response(
             self.get_serializer(instance).data, status=status.HTTP_201_CREATED
@@ -91,7 +124,7 @@ class MarketOrderViewSet(
         serializer.is_valid(raise_exception=True)
 
         instance = self.get_object()
-        instance = MarketOrderManager(
+        instance = MarketOrderService(
             serializer.validated_data, instance=instance
         ).update()
 
@@ -113,6 +146,28 @@ class LimitOrderViewSet(
         "update": LimitOrderUpdateSerializer,
         "partial_update": LimitOrderUpdateSerializer,
     }
+    permission_action_classes = {
+        "list": [IsAdmin | IsAnalyst],
+        "retrieve": [IsAdmin | IsAnalyst | IsOrderOwner],
+        "update": [IsAdmin],
+        "partial_update": [IsAdmin],
+    }
+
+    def get_object(self):
+        try:
+            instance = LimitOrder.objects.select_related("portfolio", "investment").get(
+                pk=self.kwargs["pk"]
+            )
+        except LimitOrder.DoesNotExist:
+            raise Http404
+
+        self.check_object_permissions(self.request, instance)
+
+        return instance
+
+    @property
+    def permission_classes(self):
+        return self.permission_action_classes.get(self.action, [])
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
@@ -121,7 +176,7 @@ class LimitOrderViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        instance = LimitOrderManager(serializer.validated_data).create()
+        instance = LimitOrderService(serializer.validated_data).create()
 
         return Response(
             self.get_serializer(instance).data, status=status.HTTP_201_CREATED
@@ -132,7 +187,7 @@ class LimitOrderViewSet(
         serializer.is_valid(raise_exception=True)
 
         instance = self.get_object()
-        instance = LimitOrderManager(
+        instance = LimitOrderService(
             serializer.validated_data, instance=instance
         ).update()
 
@@ -146,6 +201,7 @@ class InvestmentPortfolioViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
+    queryset = InvestmentPortfolio.objects.all()
     serializer_action_classes = {
         "list": InvestmentPortfolioRetrieveSerializer,
         "retrieve": InvestmentPortfolioRetrieveSerializer,
@@ -153,7 +209,17 @@ class InvestmentPortfolioViewSet(
         "update": InvestmentPortfolioUpdateSerializer,
         "partial_update": InvestmentPortfolioUpdateSerializer,
     }
-    queryset = InvestmentPortfolio.objects.all()
+    # TODO if not admin, return not all portfolios, only user's trades
+    permission_action_classes = {
+        "list": [IsAdmin],
+        "retrieve": [IsAdmin | IsOwner],
+        "update": [IsAdmin],
+        "partial_update": [IsAdmin],
+    }
+
+    @property
+    def permission_classes(self):
+        return self.permission_action_classes.get(self.action, [])
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
@@ -174,7 +240,7 @@ class InvestmentPortfolioViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        instance = InvestmentPortfolioManager(serializer.validated_data).create()
+        instance = InvestmentPortfolioService(serializer.validated_data).create()
 
         return Response(
             self.get_serializer(instance).data, status=status.HTTP_201_CREATED
@@ -185,7 +251,7 @@ class InvestmentPortfolioViewSet(
         serializer.is_valid(raise_exception=True)
 
         instance = self.get_object()
-        instance = InvestmentPortfolioManager(
+        instance = InvestmentPortfolioService(
             serializer.validated_data, instance=instance
         ).update()
 
@@ -207,9 +273,13 @@ class TradeViewSet(
         "update": TradeUpdateSerializer,
         "partial_update": TradeUpdateSerializer,
     }
-
-    def get_serializer_class(self):
-        return self.serializer_action_classes[self.action]
+    # TODO if not admin, return not all trades, only user's trades
+    permission_action_classes = {
+        "list": [IsAdmin | IsAnalyst],
+        "retrieve": [IsAdmin | IsAnalyst | IsBuyerOrSeller],
+        "update": [IsAdmin],
+        "partial_update": [IsAdmin],
+    }
 
     def get_object(self):
         try:
@@ -223,11 +293,18 @@ class TradeViewSet(
 
         return instance
 
+    @property
+    def permission_classes(self):
+        return self.permission_action_classes.get(self.action, [])
+
+    def get_serializer_class(self):
+        return self.serializer_action_classes[self.action]
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        instance = TradeManager(serializer.validated_data).create()
+        instance = TradeService(serializer.validated_data).create()
 
         return Response(
             self.get_serializer(instance).data, status=status.HTTP_201_CREATED
@@ -238,7 +315,7 @@ class TradeViewSet(
         serializer.is_valid(raise_exception=True)
 
         instance = self.get_object()
-        instance = TradeManager(serializer.validated_data, instance=instance).update()
+        instance = TradeService(serializer.validated_data, instance=instance).update()
 
         return Response(self.get_serializer(instance).data, status=status.HTTP_200_OK)
 
@@ -258,6 +335,17 @@ class RecommendationViewSet(
         "update": RecommendationUpdateSerializer,
         "partial_update": RecommendationUpdateSerializer,
     }
+    # TODO if not admin, return not all recommendations, only user's trades
+    permission_action_classes = {
+        "list": [IsAdmin | IsAnalyst],
+        "retrieve": [IsAdmin | IsAnalyst],
+        "update": [IsAdmin],
+        "partial_update": [IsAdmin],
+    }
+
+    @property
+    def permission_classes(self):
+        return self.permission_action_classes.get(self.action, [])
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
