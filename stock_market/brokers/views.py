@@ -27,10 +27,12 @@ from brokers.serializers import (
     TradeRetrieveSerializer,
     TradeUpdateSerializer,
 )
+from django.db.models import Q
 from django.http import Http404
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from users.models import Roles
 from users.permissions import IsAdmin, IsAnalyst, IsOwner
 from utils.services import (
     InvestmentPortfolioService,
@@ -281,13 +283,19 @@ class TradeViewSet(
         "update": TradeUpdateSerializer,
         "partial_update": TradeUpdateSerializer,
     }
-    # TODO if not admin, return not all trades, only user's trades
     permission_action_classes = {
-        "list": [IsAdmin | IsAnalyst],
         "retrieve": [IsAdmin | IsAnalyst | IsBuyerOrSeller],
         "update": [IsAdmin],
         "partial_update": [IsAdmin],
     }
+
+    def get_queryset(self):
+        if self.request.jwt_user.role in (Roles.ADMIN, Roles.ANALYST):
+            return Trade.objects.all()
+
+        portfolios = InvestmentPortfolio.objects.filter(owner=self.request.jwt_user)
+
+        return Trade.objects.filter(Q(seller__in=portfolios) | Q(buyer__in=portfolios))
 
     def get_object(self):
         try:
