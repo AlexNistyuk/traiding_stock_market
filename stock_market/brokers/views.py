@@ -29,6 +29,7 @@ from brokers.serializers import (
 )
 from django.http import Http404
 from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from users.permissions import IsAdmin, IsAnalyst, IsOwner
 from utils.services import (
@@ -205,11 +206,11 @@ class InvestmentPortfolioViewSet(
     serializer_action_classes = {
         "list": InvestmentPortfolioRetrieveSerializer,
         "retrieve": InvestmentPortfolioRetrieveSerializer,
+        "own": InvestmentPortfolioRetrieveSerializer,
         "create": InvestmentPortfolioCreateSerializer,
         "update": InvestmentPortfolioUpdateSerializer,
         "partial_update": InvestmentPortfolioUpdateSerializer,
     }
-    # TODO if not admin, return not all portfolios, only user's trades
     permission_action_classes = {
         "list": [IsAdmin],
         "retrieve": [IsAdmin | IsOwner],
@@ -256,6 +257,13 @@ class InvestmentPortfolioViewSet(
         ).update()
 
         return Response(self.get_serializer(instance).data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["get"], url_path="own")
+    def own(self, request, *args, **kwargs):
+        queryset = InvestmentPortfolio.objects.filter(owner=request.jwt_user)
+        serializer = self.get_serializer(queryset, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TradeViewSet(
