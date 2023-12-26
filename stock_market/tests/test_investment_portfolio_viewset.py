@@ -74,7 +74,7 @@ class InvestmentPortfolioViewSetTest(TestCase):
         response = self.client.put(
             path=path,
             data={
-                "quantity": self.fake.pyint(),
+                "quantity": portfolio.quantity + 1,
             },
             content_type="application/json",
         )

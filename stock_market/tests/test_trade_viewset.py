@@ -21,17 +21,11 @@ class TradeViewSetTest(TestCase):
         self.assertIsInstance(response.data[0], dict)
 
     def test_create_trade_ok(self):
-        seller = self.new_portfolio()
-        buyer = self.new_portfolio()
-        buyer.investment = seller.investment
-        buyer.save()
-
         response = self.client.post(
             path=self.path,
             data={
                 "quantity": self.fake.pyint(),
-                "seller": seller.id,
-                "buyer": buyer.id,
+                "portfolio": self.new_portfolio().id,
             },
         )
 
@@ -39,37 +33,18 @@ class TradeViewSetTest(TestCase):
         self.assertIsInstance(response.data, dict)
         self.assertIn("investment", response.data)
 
-    def test_create_trade_with_equal_seller_buyer(self):
-        seller = self.new_portfolio()
-
+    def test_create_trade_with_zero_quantity(self):
         response = self.client.post(
             path=self.path,
             data={
-                "quantity": self.fake.pyint(),
-                "seller": seller.id,
-                "buyer": seller.id,
-            },
-        )
-
-        self.assertEqual(response.status_code, 400)
-
-    def test_create_trade_with_not_equal_investments(self):
-        seller = self.new_portfolio()
-        buyer = self.new_portfolio()
-
-        response = self.client.post(
-            path=self.path,
-            data={
-                "quantity": self.fake.pyint(),
-                "seller": seller.id,
-                "buyer": buyer.id,
+                "quantity": 0,
+                "portfolio": self.new_portfolio().id,
             },
         )
 
         self.assertEqual(response.status_code, 400)
 
     # TODO: create retrieve trade negative using permissions
-
     def test_retrieve_trade_ok(self):
         trade = self.new_trade()
         path = f"{self.path}{trade.id}/"
@@ -83,15 +58,12 @@ class TradeViewSetTest(TestCase):
     def test_update_trade_ok(self):
         trade = self.new_trade()
         path = f"{self.path}{trade.id}/"
-        trade.buyer.investment = trade.seller.investment
-        trade.buyer.save()
 
         response = self.client.put(
             path=path,
             data={
                 "quantity": self.fake.pyint(),
-                "seller": trade.seller.id,
-                "buyer": trade.buyer.id,
+                "portfolio": trade.portfolio.id,
             },
             content_type="application/json",
         )
@@ -108,40 +80,7 @@ class TradeViewSetTest(TestCase):
             path=path,
             data={
                 "quantity": 0,
-                "seller": trade.seller.id,
-                "buyer": trade.buyer.id,
-            },
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, 400)
-
-    def test_update_trade_with_equal_seller_buyer(self):
-        trade = self.new_trade()
-        path = f"{self.path}{trade.id}/"
-
-        response = self.client.put(
-            path=path,
-            data={
-                "quantity": self.fake.pyint(),
-                "seller": trade.seller.id,
-                "buyer": trade.seller.id,
-            },
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, 400)
-
-    def test_update_trade_with_not_equal_investments(self):
-        trade = self.new_trade()
-        path = f"{self.path}{trade.id}/"
-
-        response = self.client.put(
-            path=path,
-            data={
-                "quantity": self.fake.pyint(),
-                "seller": trade.seller.id,
-                "buyer": trade.buyer.id,
+                "portfolio": trade.portfolio.id,
             },
             content_type="application/json",
         )

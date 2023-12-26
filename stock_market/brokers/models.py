@@ -3,7 +3,6 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import F
 
 
 class InvestmentTypes(models.TextChoices):
@@ -58,7 +57,6 @@ class Order(models.Model):
     status = models.CharField(
         choices=OrderStatuses.choices, default=OrderStatuses.ACTIVE
     )
-    is_sell = models.BooleanField(default=False)
     portfolio = models.ForeignKey("InvestmentPortfolio", on_delete=models.CASCADE)
     investment = models.ForeignKey("Investment", on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -141,12 +139,7 @@ class Trade(models.Model):
         decimal_places=settings.DECIMAL_PLACES,
         validators=[MinValueValidator(Decimal("0"))],
     )
-    seller = models.ForeignKey(
-        "InvestmentPortfolio", on_delete=models.DO_NOTHING, related_name="seller"
-    )
-    buyer = models.ForeignKey(
-        "InvestmentPortfolio", on_delete=models.DO_NOTHING, related_name="buyer"
-    )
+    portfolio = models.ForeignKey("InvestmentPortfolio", on_delete=models.DO_NOTHING)
     investment = models.ForeignKey("Investment", on_delete=models.DO_NOTHING)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -160,10 +153,6 @@ class Trade(models.Model):
             models.CheckConstraint(
                 check=models.Q(quantity__gte=1),
                 name="trade_quantity_greater_than_0",
-            ),
-            models.CheckConstraint(
-                check=~models.Q(seller=F("buyer")),
-                name="trade_seller_not_equal_buyer",
             ),
         ]
 

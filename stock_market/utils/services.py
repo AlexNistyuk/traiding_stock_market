@@ -1,7 +1,6 @@
 import abc
 
 from brokers.models import InvestmentPortfolio, LimitOrder, MarketOrder, Trade
-from django.db import IntegrityError, transaction
 from users.models import User
 from utils.exceptions import Http400
 
@@ -57,10 +56,7 @@ class InvestmentPortfolioService(IService):
 
     def update(self):
         count_difference = self.data["quantity"] - self.instance.quantity
-        if count_difference > 0:
-            self.instance.spend_amount += (
-                self.instance.investment.price * count_difference
-            )
+        self.instance.spend_amount += self.instance.investment.price * count_difference
 
         self.instance.quantity = self.data["quantity"]
         self.instance.save()
@@ -72,111 +68,47 @@ class OrderService(IService):
     model = None
 
     def create(self):
-        portfolio = self.data["portfolio"]
-        self.data["investment"] = portfolio.investment
+        self.data["investment"] = self.data["portfolio"].investment
 
-        with transaction.atomic():
-            self.change_portfolio_quantity(portfolio)
-
-            return self.model.objects.create(**self.data)
-
-    def change_portfolio_quantity(self, portfolio: InvestmentPortfolio):
-        quantity = self.get_quantity_difference()
-        if quantity == 0:
-            return
-
-        try:
-            portfolio.quantity += quantity
-            portfolio.save()
-        except IntegrityError:
-            raise Http400(
-                {
-                    "detail": [
-                        "The portfolio does not have the required quantity to sell"
-                    ]
-                }
-            )
-
-    def get_quantity_difference(self) -> int:
-        if "is_sell" not in self.data:
-            raise Http400({"detail": ["'is_sell' is not provided"]})
-
-        if self.instance is None:
-            return -self.data["quantity"] if self.data["is_sell"] else 0
-
-        if self.instance.is_sell:
-            if self.data["is_sell"]:
-                return -(self.data["quantity"] - self.instance.quantity)
-            return self.instance.quantity
-
-        if self.data["is_sell"]:
-            return -self.data["quantity"]
-        return 0
+        return self.model.objects.create(**self.data)
 
 
 class MarketOrderService(OrderService):
     model = MarketOrder
 
     def update(self):
-        with transaction.atomic():
-            self.change_portfolio_quantity(self.instance.portfolio)
+        self.instance.quantity = self.data["quantity"]
+        self.instance.status = self.data["status"]
+        self.instance.save()
 
-            self.instance.quantity = self.data["quantity"]
-            self.instance.is_sell = self.data["is_sell"]
-            self.instance.status = self.data["status"]
-            self.instance.save()
-
-            return self.instance
+        return self.instance
 
 
 class LimitOrderService(OrderService):
     model = LimitOrder
 
     def update(self):
-        with transaction.atomic():
-            self.change_portfolio_quantity(self.instance.portfolio)
+        self.instance.quantity = self.data["quantity"]
+        self.instance.status = self.data["status"]
+        self.instance.price = self.data["price"]
+        self.instance.activated_status = self.data["activated_status"]
+        self.instance.save()
 
-            self.instance.quantity = self.data["quantity"]
-            self.instance.is_sell = self.data["is_sell"]
-            self.instance.status = self.data["status"]
-            self.instance.price = self.data["price"]
-            self.instance.activated_status = self.data["activated_status"]
-            self.instance.save()
-
-            return self.instance
+        return self.instance
 
 
 class TradeService(IService):
     def create(self):
-        self.__check_data()
-
-        self.data["investment"] = self.data["buyer"].investment
+        self.data["investment"] = self.data["portfolio"].investment
         self.data["price"] = self.data["investment"].price
 
         return Trade.objects.create(**self.data)
 
     def update(self):
-        self.__check_data()
-
         self.instance.quantity = self.data["quantity"]
-        self.instance.seller = self.data["seller"]
-        self.instance.buyer = self.data["buyer"]
-        self.instance.investment = self.data["buyer"].investment
+        self.instance.portfolio = self.data["portfolio"]
+        self.instance.investment = self.data["portfolio"].investment
         self.instance.price = self.instance.investment.price
         self.instance.save()
 
         return self.instance
-
-    def __check_data(self):
-        self.__check_seller_equal_buyer()
-        self.__check_equal_investments()
-
-    def __check_seller_equal_buyer(self):
-        if self.data["seller"] == self.data["buyer"]:
-            raise Http400({"seller": "Seller and buyer must not be the same"})
-
-    def __check_equal_investments(self):
-        if self.data["seller"].investment != self.data["buyer"].investment:
-            raise Http400(
-                {"investment": ["Seller and buyer investments must be the same"]}
-            )

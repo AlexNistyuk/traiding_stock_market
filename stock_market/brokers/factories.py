@@ -43,7 +43,6 @@ class InvestmentPortfolioFactory(DjangoModelFactory):
 
 class OrderFactory(DjangoModelFactory):
     quantity = factory.Faker("pyint")
-    is_sell = factory.Faker("boolean")
     status = FuzzyTextChoice(choices=OrderStatuses.choices)
     portfolio = factory.SubFactory(InvestmentPortfolioFactory)
     investment = factory.SubFactory(InvestmentFactory)
@@ -65,8 +64,7 @@ class LimitOrderFactory(OrderFactory):
 class TradeFactory(DjangoModelFactory):
     quantity = factory.Faker("pyint")
     price = factory.Faker("pyint")
-    seller = factory.SubFactory(InvestmentPortfolioFactory)
-    buyer = factory.SubFactory(InvestmentPortfolioFactory)
+    portfolio = factory.SubFactory(InvestmentPortfolioFactory)
     investment = factory.SubFactory(InvestmentFactory)
 
     class Meta:

@@ -6,7 +6,7 @@ from brokers.models import (
     Recommendation,
     Trade,
 )
-from brokers.permissions import IsBuyerOrSeller, IsOrderOwner
+from brokers.permissions import IsPortfolioOwner
 from brokers.serializers import (
     InvestmentCreateSerializer,
     InvestmentPortfolioCreateSerializer,
@@ -27,7 +27,6 @@ from brokers.serializers import (
     TradeRetrieveSerializer,
     TradeUpdateSerializer,
 )
-from django.db.models import Q
 from django.http import Http404
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -151,7 +150,7 @@ class LimitOrderViewSet(
     }
     permission_action_classes = {
         "list": [IsAdmin | IsAnalyst],
-        "retrieve": [IsAdmin | IsAnalyst | IsOrderOwner],
+        "retrieve": [IsAdmin | IsAnalyst | IsPortfolioOwner],
         "update": [IsAdmin],
         "partial_update": [IsAdmin],
     }
@@ -284,7 +283,7 @@ class TradeViewSet(
         "partial_update": TradeUpdateSerializer,
     }
     permission_action_classes = {
-        "retrieve": [IsAdmin | IsAnalyst | IsBuyerOrSeller],
+        "retrieve": [IsAdmin | IsAnalyst | IsPortfolioOwner],
         "update": [IsAdmin],
         "partial_update": [IsAdmin],
     }
@@ -295,13 +294,13 @@ class TradeViewSet(
 
         portfolios = InvestmentPortfolio.objects.filter(owner=self.request.jwt_user)
 
-        return Trade.objects.filter(Q(seller__in=portfolios) | Q(buyer__in=portfolios))
+        return Trade.objects.filter(portfolio__in=portfolios)
 
     def get_object(self):
         try:
-            instance = Trade.objects.select_related(
-                "buyer", "seller", "investment"
-            ).get(pk=self.kwargs["pk"])
+            instance = Trade.objects.select_related("portfolio", "investment").get(
+                pk=self.kwargs["pk"]
+            )
         except Trade.DoesNotExist:
             raise Http404
 
