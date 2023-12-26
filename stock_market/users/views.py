@@ -1,5 +1,3 @@
-from brokers.models import Investment, LimitOrder
-from django.contrib.postgres.aggregates import ArrayAgg
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -15,7 +13,6 @@ from users.serializers import (
 )
 from utils.services import UserService
 from utils.token import Token
-from utils.trades import LimitOrderTrade
 
 
 class UserViewSet(
@@ -115,21 +112,6 @@ class UserViewSet(
         return Response(
             data={"detail": "Successfully set subscriptions"}, status=status.HTTP_200_OK
         )
-
-    @action(detail=False, methods=["get"], url_path="test")
-    def test(self, request, *args, **kwargs):
-        result = (
-            LimitOrder.objects.values("investment")
-            .annotate(id=ArrayAgg("id"))
-            .filter(status="active")
-        )
-
-        investments = Investment.objects.filter(
-            id__in=[data["investment"] for data in result]
-        )
-        orders = LimitOrderTrade().get_orders(investment=investments[1])
-
-        return orders
 
 
 class TokenRefreshAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
