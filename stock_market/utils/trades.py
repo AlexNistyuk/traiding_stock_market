@@ -8,7 +8,7 @@ from brokers.models import (
     OrderStatuses,
 )
 from brokers.models import Trade as TradeModel
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.db.models import F, Q
 
 
@@ -60,28 +60,25 @@ class LimitOrderTrade(IOrder):
 
 class Trade:
     def make(self, order: MarketOrder | LimitOrder, investment: Investment):
-        try:
-            with transaction.atomic():
-                spend_money = investment.price * order.quantity
+        with transaction.atomic():
+            spend_money = investment.price * order.quantity
 
-                order.portfolio.owner.balance = F("balance") - spend_money
-                order.portfolio.spend_amount += spend_money
+            order.portfolio.owner.balance = F("balance") - spend_money
+            order.portfolio.spend_amount += spend_money
 
-                order.portfolio.quantity += order.quantity
-                investment.quantity = F("quantity") - order.quantity
+            order.portfolio.quantity += order.quantity
+            investment.quantity = F("quantity") - order.quantity
 
-                order.status = OrderStatuses.COMPLETED
+            order.status = OrderStatuses.COMPLETED
 
-                TradeModel.objects.create(
-                    quantity=order.quantity,
-                    price=order.investment.price,
-                    investment=investment,
-                    portfolio=order.portfolio,
-                )
+            TradeModel.objects.create(
+                quantity=order.quantity,
+                price=order.investment.price,
+                investment=investment,
+                portfolio=order.portfolio,
+            )
 
-                order.portfolio.owner.save()
-                order.portfolio.save()
-                order.save()
-                investment.save()
-        except IntegrityError:
-            ...
+            order.portfolio.owner.save()
+            order.portfolio.save()
+            order.save()
+            investment.save()

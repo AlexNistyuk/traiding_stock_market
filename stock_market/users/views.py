@@ -1,5 +1,6 @@
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from users.models import User
 from users.permissions import IsAdmin
@@ -11,7 +12,7 @@ from users.serializers import (
     UserSubscriptionSerializer,
     UserUpdateSerializer,
 )
-from utils.services import UserService
+from users.utils import UserService
 from utils.token import Token
 
 
@@ -33,15 +34,15 @@ class UserViewSet(
         "set_subscription": UserSubscriptionSerializer,
     }
     permission_action_classes = {
-        "retrieve": [IsAdmin],
-        "list": [IsAdmin],
-        "update": [IsAdmin],
-        "partial_update": [IsAdmin],
+        "retrieve": (IsAdmin,),
+        "list": (IsAdmin,),
+        "update": (IsAdmin,),
+        "partial_update": (IsAdmin,),
     }
 
     @property
     def permission_classes(self):
-        return self.permission_action_classes.get(self.action, [])
+        return self.permission_action_classes.get(self.action, (AllowAny,))
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
@@ -53,7 +54,9 @@ class UserViewSet(
         instance = self.get_object()
         instance = UserService(serializer.validated_data, instance=instance).update()
 
-        return Response(self.get_serializer(instance).data, status=status.HTTP_200_OK)
+        data = self.get_serializer(instance).data
+
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["post"], url_path="register")
     def register(self, request, *args, **kwargs):
@@ -62,9 +65,9 @@ class UserViewSet(
 
         instance = UserService(serializer.validated_data).create()
 
-        return Response(
-            self.get_serializer(instance).data, status=status.HTTP_201_CREATED
-        )
+        data = self.get_serializer(instance).data
+
+        return Response(data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=["post"], url_path="change-password")
     def change_password(self, request, *args, **kwargs):
@@ -109,9 +112,9 @@ class UserViewSet(
 
         UserService(serializer.validated_data).set_subscriptions(request.jwt_user)
 
-        return Response(
-            data={"detail": "Successfully set subscriptions"}, status=status.HTTP_200_OK
-        )
+        data = {"detail": "Successfully set subscriptions"}
+
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class TokenRefreshAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
@@ -136,6 +139,6 @@ class TokenRefreshAPIView(mixins.CreateModelMixin, generics.GenericAPIView):
                 data={"detail": "Token is invalid"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        token = Token(user)
+        tokens = Token(user).get_tokens()
 
-        return Response(data=token.get_tokens())
+        return Response(tokens)
