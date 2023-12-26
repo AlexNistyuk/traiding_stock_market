@@ -9,7 +9,7 @@ from brokers.models import (
 )
 from brokers.models import Trade as TradeModel
 from django.db import IntegrityError, transaction
-from django.db.models import Q
+from django.db.models import F, Q
 
 
 class IOrder(abc.ABC):
@@ -59,27 +59,29 @@ class LimitOrderTrade(IOrder):
 
 
 class Trade:
-    def make(self, order: MarketOrder | LimitOrder):
+    def make(self, order: MarketOrder | LimitOrder, investment: Investment):
         try:
             with transaction.atomic():
-                spend_money = order.investment.price * order.quantity
+                spend_money = investment.price * order.quantity
 
-                order.portfolio.owner.balance -= spend_money
-
+                order.portfolio.owner.balance = F("balance") - spend_money
                 order.portfolio.spend_amount += spend_money
+
                 order.portfolio.quantity += order.quantity
+                investment.quantity = F("quantity") - order.quantity
 
                 order.status = OrderStatuses.COMPLETED
 
                 TradeModel.objects.create(
                     quantity=order.quantity,
                     price=order.investment.price,
-                    investment=order.investment,
+                    investment=investment,
                     portfolio=order.portfolio,
                 )
 
                 order.portfolio.owner.save()
                 order.portfolio.save()
                 order.save()
+                investment.save()
         except IntegrityError:
             ...
