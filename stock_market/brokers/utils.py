@@ -260,7 +260,7 @@ class TradeMaker:
             return market_order
 
         try:
-            Trade().make(market_order, market_order.investment)
+            self.make(market_order, market_order.investment)
         except IntegrityError:
             ...
         else:
@@ -273,7 +273,7 @@ class TradeMaker:
             return limit_order
 
         try:
-            Trade().make(limit_order, limit_order.investment)
+            self.make(limit_order, limit_order.investment)
         except IntegrityError:
             ...
         else:
