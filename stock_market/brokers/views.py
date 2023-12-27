@@ -4,8 +4,8 @@ from brokers.models import (
     LimitOrder,
     MarketOrder,
     Recommendation,
+    Trade,
 )
-from brokers.models import Trade as TradeModel
 from brokers.permissions import IsPortfolioOwner
 from brokers.serializers import (
     InvestmentCreateSerializer,
@@ -27,11 +27,11 @@ from brokers.serializers import (
     TradeRetrieveSerializer,
     TradeUpdateSerializer,
 )
-from brokers.trades import Trade
 from brokers.utils import (
     InvestmentPortfolioService,
     LimitOrderService,
     MarketOrderService,
+    TradeMaker,
     TradeService,
 )
 from rest_framework import mixins, status, viewsets
@@ -105,7 +105,7 @@ class MarketOrderViewSet(
         serializer.is_valid(raise_exception=True)
 
         instance = MarketOrderService(serializer.validated_data).create()
-        instance = Trade().make_market_order(instance)
+        instance = TradeMaker().make_market_order(instance)
 
         data = self.get_serializer(instance).data
 
@@ -121,7 +121,7 @@ class MarketOrderViewSet(
         instance = MarketOrderService(
             serializer.validated_data, instance=instance
         ).update()
-        instance = Trade().make_market_order(instance)
+        instance = TradeMaker().make_market_order(instance)
 
         data = self.get_serializer(instance).data
 
@@ -162,7 +162,7 @@ class LimitOrderViewSet(
         serializer.is_valid(raise_exception=True)
 
         instance = LimitOrderService(serializer.validated_data).create()
-        instance = Trade().make_limit_order(instance)
+        instance = TradeMaker().make_limit_order(instance)
 
         data = self.get_serializer(instance).data
 
@@ -178,7 +178,7 @@ class LimitOrderViewSet(
         instance = LimitOrderService(
             serializer.validated_data, instance=instance
         ).update()
-        instance = Trade().make_limit_order(instance)
+        instance = TradeMaker().make_limit_order(instance)
 
         data = self.get_serializer(instance).data
 
@@ -255,7 +255,7 @@ class TradeViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = TradeModel.objects.all()
+    queryset = Trade.objects.all()
     serializer_action_classes = {
         "list": TradeRetrieveSerializer,
         "retrieve": TradeRetrieveSerializer,

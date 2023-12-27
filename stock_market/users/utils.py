@@ -1,8 +1,8 @@
 import abc
 
 from django.http import Http404
+from users.exceptions import Http400
 from users.models import User
-from utils.exceptions import Http400
 
 
 class IService(abc.ABC):
