@@ -27,6 +27,7 @@ from brokers.serializers import (
     TradeRetrieveSerializer,
     TradeUpdateSerializer,
 )
+from brokers.trades import Trade
 from brokers.utils import (
     InvestmentPortfolioService,
     LimitOrderService,
@@ -39,7 +40,6 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from users.models import Roles
 from users.permissions import IsAdmin, IsAnalyst, IsOwner
-from utils.trades import Trade
 
 
 class InvestmentViewSet(

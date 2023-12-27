@@ -1,3 +1,4 @@
+from brokers.trades import IOrder, LimitOrderTrade, MarketOrderTrade, Trade
 from brokers.utils import (
     InvestmentService,
     LimitOrderService,
@@ -5,7 +6,6 @@ from brokers.utils import (
     OrderService,
 )
 from django.db import IntegrityError
-from utils.trades import IOrder, LimitOrderTrade, MarketOrderTrade, Trade
 
 
 def orders_trade(order_service: OrderService, order_trade: IOrder):
