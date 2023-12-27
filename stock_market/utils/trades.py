@@ -99,7 +99,7 @@ class Trade:
         return market_order
 
     def make_limit_order(self, limit_order: LimitOrder):
-        if not self.__check_limit_order(limit_order):
+        if not self.__is_executable_limit_order(limit_order):
             return limit_order
 
         try:
@@ -111,7 +111,7 @@ class Trade:
 
         return limit_order
 
-    def __check_limit_order(self, limit_order: LimitOrder):
+    def __is_executable_limit_order(self, limit_order: LimitOrder):
         investment = limit_order.investment
         order_price = limit_order.price
         order_status = limit_order.status
