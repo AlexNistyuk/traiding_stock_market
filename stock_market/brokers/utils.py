@@ -1,6 +1,19 @@
-from brokers.models import InvestmentPortfolio, LimitOrder, MarketOrder, Trade
+from brokers.models import (
+    Investment,
+    InvestmentPortfolio,
+    LimitOrder,
+    MarketOrder,
+    OrderStatuses,
+    Trade,
+)
+from django.db.models import Count
 from django.http import Http404
 from users.utils import IService
+
+
+class InvestmentService:
+    def get_by_filters(self, **filters):
+        return Investment.objects.filter(**filters)
 
 
 class InvestmentPortfolioService(IService):
@@ -83,6 +96,18 @@ class OrderService(IService):
 
     def bulk_update(self, orders: list[MarketOrder | LimitOrder]):
         return self.model.objects.bulk_update(orders)
+
+    def get_by_filters(self, *args, **filters):
+        return self.model.objects.select_related("portfolio", "investment").filter(
+            *args, **filters
+        )
+
+    def get_group_by_investment(self):
+        return (
+            self.model.objects.values("investment")
+            .annotate(count=Count("id"))
+            .filter(status=OrderStatuses.ACTIVE)
+        )
 
 
 class MarketOrderService(OrderService):

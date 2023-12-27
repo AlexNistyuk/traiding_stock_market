@@ -19,9 +19,8 @@ class JWTAuthMiddleware(MiddlewareMixin):
         if path.split("/")[1] == "admin":
             return
 
-        if path.split("/")[3] in self.anonymous_urls:
-            return
-        return self.__get_user(request)
+        if path.split("/")[3] not in self.anonymous_urls:
+            return self.__get_user(request)
 
     @staticmethod
     def __get_user(request):
@@ -43,6 +42,11 @@ class JWTAuthMiddleware(MiddlewareMixin):
             return http_response
 
         try:
-            request.jwt_user = User.objects.get(pk=payload["id"])
+            user = User.objects.get(pk=payload["id"])
         except User.DoesNotExist:
             return http_response
+
+        if user.is_blocked:
+            return http_response
+
+        request.jwt_user = user

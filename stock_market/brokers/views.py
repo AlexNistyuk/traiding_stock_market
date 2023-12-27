@@ -4,8 +4,8 @@ from brokers.models import (
     LimitOrder,
     MarketOrder,
     Recommendation,
-    Trade,
 )
+from brokers.models import Trade as TradeModel
 from brokers.permissions import IsPortfolioOwner
 from brokers.serializers import (
     InvestmentCreateSerializer,
@@ -39,6 +39,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from users.models import Roles
 from users.permissions import IsAdmin, IsAnalyst, IsOwner
+from utils.trades import Trade
 
 
 class InvestmentViewSet(
@@ -104,6 +105,7 @@ class MarketOrderViewSet(
         serializer.is_valid(raise_exception=True)
 
         instance = MarketOrderService(serializer.validated_data).create()
+        instance = Trade().make_market_order(instance)
 
         data = self.get_serializer(instance).data
 
@@ -119,6 +121,7 @@ class MarketOrderViewSet(
         instance = MarketOrderService(
             serializer.validated_data, instance=instance
         ).update()
+        instance = Trade().make_market_order(instance)
 
         data = self.get_serializer(instance).data
 
@@ -159,6 +162,7 @@ class LimitOrderViewSet(
         serializer.is_valid(raise_exception=True)
 
         instance = LimitOrderService(serializer.validated_data).create()
+        instance = Trade().make_limit_order(instance)
 
         data = self.get_serializer(instance).data
 
@@ -174,6 +178,7 @@ class LimitOrderViewSet(
         instance = LimitOrderService(
             serializer.validated_data, instance=instance
         ).update()
+        instance = Trade().make_limit_order(instance)
 
         data = self.get_serializer(instance).data
 
@@ -250,7 +255,7 @@ class TradeViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = Trade.objects.all()
+    queryset = TradeModel.objects.all()
     serializer_action_classes = {
         "list": TradeRetrieveSerializer,
         "retrieve": TradeRetrieveSerializer,
