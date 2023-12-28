@@ -1,3 +1,4 @@
+from brokers.tasks import Email
 from rest_framework import generics, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -64,6 +65,7 @@ class UserViewSet(
         serializer.is_valid(raise_exception=True)
 
         instance = UserService(serializer.validated_data).create()
+        Email().send_welcome_email(instance.email)
 
         data = self.get_serializer(instance).data
 

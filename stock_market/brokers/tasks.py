@@ -1,11 +1,14 @@
-from brokers.models import OrderStatuses
+from brokers.models import LimitOrder, OrderStatuses
 from brokers.utils import (
     InvestmentService,
     LimitOrderService,
     LimitOrderTrade,
     TradeMaker,
 )
+from django.core.mail import send_mail, send_mass_mail
 from django.db import IntegrityError
+
+from stock_market import settings
 
 
 def limit_orders_trade() -> None:
@@ -39,3 +42,31 @@ def limit_orders_trade() -> None:
                     break
 
     order_service.bulk_update(completed_orders, ("status",))
+    Email().send_executed_orders(completed_orders)
+
+
+class Email:
+    subject = "Trade Platform"
+    sender = settings.EMAIL_HOST_USER
+
+    def send_welcome_email(self, recipient: str):
+        message = """
+        Hi! You have been successfully registered!
+        Thank you for choosing our trade platform
+        """
+
+        send_mail(self.subject, message, self.sender, (recipient,))
+
+    def send_executed_orders(self, orders: list[LimitOrder]):
+        message_template = "Hey! You have bought %s!"
+        data = [
+            (
+                self.subject,
+                message_template % order.investment.name,
+                self.sender,
+                (order.portfolio.owner.email,),
+            )
+            for order in orders
+        ]
+
+        send_mass_mail(data)
