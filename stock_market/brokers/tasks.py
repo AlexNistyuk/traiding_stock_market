@@ -1,3 +1,6 @@
+import smtplib
+from email.mime.text import MIMEText
+
 from brokers.models import LimitOrder, OrderStatuses
 from brokers.utils import (
     InvestmentService,
@@ -5,7 +8,6 @@ from brokers.utils import (
     LimitOrderTrade,
     TradeMaker,
 )
-from django.core.mail import send_mail, send_mass_mail
 from django.db import IntegrityError
 
 from stock_market import settings
@@ -42,31 +44,62 @@ def limit_orders_trade() -> None:
                     break
 
     order_service.bulk_update(completed_orders, ("status",))
-    Email().send_executed_orders(completed_orders)
+
+    send_mass_mail(completed_orders)
+
+
+def send_mail(recipient: str):
+    with Email() as email:
+        email.send_welcome_mail(recipient)
+
+
+def send_mass_mail(orders: list[LimitOrder]):
+    with Email() as email:
+        email.send_executed_orders(orders)
 
 
 class Email:
     subject = "Trade Platform"
     sender = settings.EMAIL_HOST_USER
 
-    def send_welcome_email(self, recipient: str):
+    def __enter__(self):
+        self.server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        self.server.starttls()
+        self.server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.server.quit()
+
+    def send_welcome_mail(self, recipient: str):
         message = """
         Hi! You have been successfully registered!
         Thank you for choosing our trade platform
         """
 
-        send_mail(self.subject, message, self.sender, (recipient,))
+        message = self.__get_message_as_string(message, recipient)
+
+        self.server.sendmail(self.sender, recipient, message)
 
     def send_executed_orders(self, orders: list[LimitOrder]):
         message_template = "Hey! You have bought %s!"
-        data = [
-            (
-                self.subject,
-                message_template % order.investment.name,
-                self.sender,
-                (order.portfolio.owner.email,),
+        messages = [
+            self.__get_message_as_string(
+                message_template % order.investment.name, order.portfolio.owner.email
             )
             for order in orders
         ]
 
-        send_mass_mail(data)
+        [
+            self.server.sendmail(self.sender, order.portfolio.owner.email, message)
+            for message, order in zip(messages, orders)
+        ]
+
+    def __get_message_as_string(self, message: str, recipient: str) -> str:
+        message = MIMEText(message)
+        message["Subject"] = self.subject
+        message["From"] = self.sender
+        message["To"] = recipient
+
+        return message.as_string()
