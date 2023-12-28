@@ -1,46 +1,41 @@
+from brokers.models import OrderStatuses
 from brokers.utils import (
     InvestmentService,
-    IOrder,
     LimitOrderService,
     LimitOrderTrade,
-    MarketOrderService,
-    MarketOrderTrade,
-    OrderService,
-    Trade,
+    TradeMaker,
 )
 from django.db import IntegrityError
 
 
-def orders_trade(order_service: OrderService, order_trade: IOrder):
+def limit_orders_trade() -> None:
+    """Trades with executable limit orders"""
+    order_service = LimitOrderService()
+    order_trade = LimitOrderTrade()
+
     result = order_service.get_group_by_investment()
 
     investments = InvestmentService().get_by_filters(
         id__in=[item["investment"] for item in result], quantity__gt=0
     )
 
+    trade_maker = TradeMaker()
+    completed_orders = []
     for investment in investments:
         orders = order_trade.get_orders(investment)
 
-        for order in orders:
+        for i, order in enumerate(orders):
             try:
-                Trade().make(order, investment)
+                trade_maker.make(order.quantity, order.portfolio, investment)
             except IntegrityError:
-                ...
-            else:
+                continue
+
+            order.status = OrderStatuses.COMPLETED
+            completed_orders.append(order)
+
+            if i < len(orders) - 1:
                 investment.refresh_from_db()
                 if investment.quantity == 0:
                     break
 
-
-def limit_orders_trade():
-    order_service = LimitOrderService()
-    order_trade = LimitOrderTrade()
-
-    return orders_trade(order_service, order_trade)
-
-
-def market_orders_trade():
-    order_service = MarketOrderService()
-    order_trade = MarketOrderTrade()
-
-    return orders_trade(order_service, order_trade)
+    order_service.bulk_update(completed_orders, ("status",))

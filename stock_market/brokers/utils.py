@@ -1,5 +1,3 @@
-import abc
-
 from brokers.models import (
     Investment,
     InvestmentPortfolio,
@@ -83,9 +81,9 @@ class OrderService(IService):
 
     def get_by_id_or_404(self, order_id: int):
         try:
-            return self.model.objects.select_related("investment", "portfolio").get(
-                id=order_id
-            )
+            return self.model.objects.select_related(
+                "investment", "portfolio__owner"
+            ).get(id=order_id)
         except self.model.DoesNotExist:
             raise Http404
 
@@ -93,25 +91,18 @@ class OrderService(IService):
         return order.delete()
 
     def get_all(self):
-        return self.model.objects.select_related("investment", "portfolio").all()
+        return self.model.objects.select_related("investment", "portfolio__owner").all()
 
     def bulk_create(self, orders: list[MarketOrder | LimitOrder]):
         return self.model.objects.bulk_create(orders)
 
-    def bulk_update(self, orders: list[MarketOrder | LimitOrder]):
-        return self.model.objects.bulk_update(orders)
+    def bulk_update(self, orders: list[MarketOrder | LimitOrder], *args):
+        return self.model.objects.bulk_update(orders, *args)
 
     def get_by_filters(self, *args, **filters):
-        return self.model.objects.select_related("portfolio", "investment").filter(
-            *args, **filters
-        )
-
-    def get_group_by_investment(self):
-        return (
-            self.model.objects.values("investment")
-            .annotate(count=Count("id"))
-            .filter(status=OrderStatuses.ACTIVE)
-        )
+        return self.model.objects.select_related(
+            "portfolio__owner", "investment"
+        ).filter(*args, **filters)
 
 
 class MarketOrderService(OrderService):
@@ -137,6 +128,13 @@ class LimitOrderService(OrderService):
 
         return self.instance
 
+    def get_group_by_investment(self):
+        return (
+            self.model.objects.values("investment")
+            .annotate(count=Count("id"))
+            .filter(status=OrderStatuses.ACTIVE)
+        )
+
 
 class TradeService(IService):
     def __init__(self, validated_data: dict = None, instance: Trade = None):
@@ -160,7 +158,7 @@ class TradeService(IService):
 
     def get_by_id_or_404(self, trade_id: int):
         try:
-            return Trade.objects.select_related("investment", "portfolio").get(
+            return Trade.objects.select_related("investment", "portfolio__owner").get(
                 id=trade_id
             )
         except Trade.DoesNotExist:
@@ -170,7 +168,7 @@ class TradeService(IService):
         return trade.delete()
 
     def get_all(self):
-        return Trade.objects.select_related("investment", "portfolio").all()
+        return Trade.objects.select_related("investment", "portfolio__owner").all()
 
     def bulk_create(self, trades: list[Trade]):
         return Trade.objects.bulk_create(trades)
@@ -179,26 +177,14 @@ class TradeService(IService):
         return Trade.objects.bulk_update(trades)
 
     def get_by_filters(self, **filters):
-        return Trade.objects.select_related("investment", "portfolio").filter(**filters)
-
-
-class IOrder(abc.ABC):
-    @abc.abstractmethod
-    def get_orders(self, *args, **kwargs):
-        raise NotImplementedError
-
-
-class MarketOrderTrade(IOrder):
-    def get_orders(self, investment: Investment):
-        return MarketOrderService().get_by_filters(
-            status=OrderStatuses.ACTIVE,
-            quantity__lte=investment.quantity,
-            investment=investment,
+        return Trade.objects.select_related("investment", "portfolio__owner").filter(
+            **filters
         )
 
 
-class LimitOrderTrade(IOrder):
+class LimitOrderTrade:
     def get_orders(self, investment: Investment):
+        """Return executable limit orders"""
         return LimitOrderService().get_by_filters(
             Q(
                 investment=investment,
@@ -230,79 +216,82 @@ class LimitOrderTrade(IOrder):
 
 
 class TradeMaker:
-    def make(self, order: MarketOrder | LimitOrder, investment: Investment):
+    def make(
+        self, quantity: int, portfolio: InvestmentPortfolio, investment: Investment
+    ):
         with transaction.atomic():
-            spend_money = investment.price * order.quantity
+            spend_money = investment.price * quantity
 
-            order.portfolio.owner.balance = F("balance") - spend_money
-            order.portfolio.spend_amount += spend_money
+            portfolio.owner.balance = F("balance") - spend_money
+            portfolio.spend_amount += spend_money
 
-            order.portfolio.quantity += order.quantity
-            investment.quantity = F("quantity") - order.quantity
-
-            order.status = OrderStatuses.COMPLETED
+            portfolio.quantity += quantity
+            investment.quantity = F("quantity") - quantity
 
             trade = {
-                "quantity": order.quantity,
-                "portfolio": order.portfolio,
+                "quantity": quantity,
+                "portfolio": portfolio,
             }
 
-            order.portfolio.owner.save()
-            order.portfolio.save()
-            order.save()
+            portfolio.owner.save()
+            portfolio.save()
             investment.save()
             TradeService(trade).create()
 
-    def make_market_order(self, market_order: MarketOrder):
-        if market_order.status != OrderStatuses.ACTIVE:
-            return market_order
-        if market_order.quantity > market_order.investment.quantity:
-            return market_order
-
+    def make_market_order(self, quantity: int, portfolio: InvestmentPortfolio) -> bool:
         try:
-            self.make(market_order, market_order.investment)
+            self.make(quantity, portfolio, portfolio.investment)
         except IntegrityError:
-            ...
-        else:
-            market_order.refresh_from_db()
-
-        return market_order
+            return False
+        return True
 
     def make_limit_order(self, limit_order: LimitOrder):
         if not self.__is_executable_limit_order(limit_order):
             return limit_order
 
         try:
-            self.make(limit_order, limit_order.investment)
+            self.make(
+                limit_order.quantity, limit_order.portfolio, limit_order.investment
+            )
         except IntegrityError:
             ...
         else:
-            limit_order.refresh_from_db()
+            limit_order.status = OrderStatuses.COMPLETED
+            limit_order.save()
 
         return limit_order
 
     def __is_executable_limit_order(self, limit_order: LimitOrder):
         investment = limit_order.investment
-        order_price = limit_order.price
-        order_status = limit_order.status
         investment_price = investment.price
 
-        if order_status != OrderStatuses.ACTIVE:
+        order_price = limit_order.price
+        order_activated_status = limit_order.activated_status
+
+        if limit_order.quantity > investment.quantity:
             return False
-        if limit_order.quantity > limit_order.investment.quantity:
-            return False
-        if order_price >= investment_price and order_status in (
+
+        if order_price >= investment_price and order_activated_status in (
             OrderActivatedStatuses.LTE,
             OrderActivatedStatuses.EQUAL,
         ):
             return True
-        if order_price < investment_price and order_status == OrderActivatedStatuses.LT:
-            return True
+
         if (
-            order_price <= investment_price
-            and order_status == OrderActivatedStatuses.GTE
+            order_price < investment_price
+            and order_activated_status == OrderActivatedStatuses.LT
         ):
             return True
-        if order_price < investment_price and order_status == OrderActivatedStatuses.GT:
+
+        if (
+            order_price <= investment_price
+            and order_activated_status == OrderActivatedStatuses.GTE
+        ):
+            return True
+
+        if (
+            order_price < investment_price
+            and order_activated_status == OrderActivatedStatuses.GT
+        ):
             return True
         return False

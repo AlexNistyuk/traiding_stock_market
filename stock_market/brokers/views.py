@@ -3,6 +3,7 @@ from brokers.models import (
     InvestmentPortfolio,
     LimitOrder,
     MarketOrder,
+    OrderStatuses,
     Recommendation,
     Trade,
 )
@@ -38,6 +39,7 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from users.exceptions import Http400
 from users.models import Roles
 from users.permissions import IsAdmin, IsAnalyst, IsOwner
 
@@ -104,8 +106,16 @@ class MarketOrderViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        instance = MarketOrderService(serializer.validated_data).create()
-        instance = TradeMaker().make_market_order(instance)
+        validated_data = serializer.validated_data
+        is_completed = TradeMaker().make_market_order(
+            validated_data["quantity"], validated_data["portfolio"]
+        )
+        if is_completed:
+            validated_data["status"] = OrderStatuses.COMPLETED
+
+            instance = MarketOrderService(serializer.validated_data).create()
+        else:
+            raise Http400({"detail": "The order can't be executed"})
 
         data = self.get_serializer(instance).data
 
@@ -121,7 +131,6 @@ class MarketOrderViewSet(
         instance = MarketOrderService(
             serializer.validated_data, instance=instance
         ).update()
-        instance = TradeMaker().make_market_order(instance)
 
         data = self.get_serializer(instance).data
 
