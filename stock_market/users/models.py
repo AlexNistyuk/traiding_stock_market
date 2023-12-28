@@ -14,7 +14,7 @@ class Roles(models.TextChoices):
 
 class UserManager(BaseUserManager):
     def _create_user(self, email, username, password, **extra_fields):
-        if not all([email, username, password]):
+        if not all((email, username, password)):
             raise ValueError(
                 "User must have an email address, an username and a password"
             )

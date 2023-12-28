@@ -85,7 +85,7 @@ WSGI_APPLICATION = "stock_market.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "ENGINE": env.str("POSTGRES_ENGINE"),
         "NAME": env.str("POSTGRES_DB"),
         "USER": env.str("POSTGRES_USER"),
         "PASSWORD": env.str("POSTGRES_PASSWORD"),
@@ -129,8 +129,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-MEDIA_URL = os.path.join(BASE_DIR.parent, "media/")
-MEDIA_ROOT = "/media/"
 
 STATIC_URL = "static/"
 
@@ -149,3 +147,15 @@ JWT_ACCESS_TOKEN_EXPIRES_IN = env.int("JWT_ACCESS_TOKEN_EXPIRES_IN")
 JWT_REFRESH_TOKEN_EXPIRES_IN = env.int("JWT_REFRESH_TOKEN_EXPIRES_IN")
 JWT_ALGORITHM = env.str("JWT_ALGORITHM")
 HTTP_AUTH_KEYWORD = env.str("HTTP_AUTH_KEYWORD")
+
+DEFAULT_FILE_STORAGE = env.str("AWS_FILE_STORAGE")
+AWS_ACCESS_KEY_ID = env.str("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = env.str("AWS_SECRET_ACCESS_KEY")
+AWS_DEFAULT_REGION = env.str("AWS_DEFAULT_REGION")
+AWS_S3_ENDPOINT_URL = (
+    f'{env.str("AWS_WEB_SCHEMA")}://{env.str("AWS_DOMAIN")}:{env.str("AWS_PORT")}/'
+)
+AWS_STORAGE_BUCKET_NAME = env.str("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_SIGNATURE_VERSION = env.str("AWS_S3_SIGNATURE_VERSION")
+AWS_DEFAULT_ACL = env.str("AWS_DEFAULT_ACL")
+AWS_PRESIGNED_EXPIRY = env.int("AWS_PRESIGNED_EXPIRY")
