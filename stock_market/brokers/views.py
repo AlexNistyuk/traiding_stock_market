@@ -39,7 +39,6 @@ from brokers.utils import (
 )
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from users.exceptions import Http400
 from users.models import Roles
@@ -64,14 +63,20 @@ class InvestmentViewSet(
         "partial_update": InvestmentUpdateSerializer,
     }
     permission_action_classes = {
+        "list": (IsAdmin | IsAnalyst | IsUser,),
+        "retrieve": (IsAdmin | IsAnalyst | IsUser,),
         "create": (IsAdmin,),
         "update": (IsAdmin,),
         "partial_update": (IsAdmin,),
     }
 
-    @property
-    def permission_classes(self):
-        return self.permission_action_classes.get(self.action, (AllowAny,))
+    def get_permissions(self):
+        return [
+            permission()
+            for permission in self.permission_action_classes.get(
+                self.action, (IsAdmin,)
+            )
+        ]
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
@@ -128,13 +133,18 @@ class MarketOrderViewSet(
     permission_action_classes = {
         "list": (IsAdmin | IsAnalyst,),
         "retrieve": (IsAdmin | IsAnalyst,),
+        "create": (IsAdmin | IsAnalyst | IsUser,),
         "update": (IsAdmin,),
         "partial_update": (IsAdmin,),
     }
 
-    @property
-    def permission_classes(self):
-        return self.permission_action_classes.get(self.action, (AllowAny,))
+    def get_permissions(self):
+        return [
+            permission()
+            for permission in self.permission_action_classes.get(
+                self.action, (IsAdmin,)
+            )
+        ]
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
@@ -192,13 +202,18 @@ class LimitOrderViewSet(
     permission_action_classes = {
         "list": (IsAdmin | IsAnalyst,),
         "retrieve": (IsAdmin | IsAnalyst | IsPortfolioOwner,),
+        "create": (IsAdmin | IsAnalyst | IsUser,),
         "update": (IsAdmin,),
         "partial_update": (IsAdmin,),
     }
 
-    @property
-    def permission_classes(self):
-        return self.permission_action_classes.get(self.action, (AllowAny,))
+    def get_permissions(self):
+        return [
+            permission()
+            for permission in self.permission_action_classes.get(
+                self.action, (IsAdmin,)
+            )
+        ]
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
@@ -250,13 +265,19 @@ class InvestmentPortfolioViewSet(
     permission_action_classes = {
         "list": (IsAdmin,),
         "retrieve": (IsAdmin | IsOwner,),
+        "own": (IsUser,),
+        "create": (IsAdmin | IsAnalyst | IsUser,),
         "update": (IsAdmin,),
         "partial_update": (IsAdmin,),
     }
 
-    @property
-    def permission_classes(self):
-        return self.permission_action_classes.get(self.action, (AllowAny,))
+    def get_permissions(self):
+        return [
+            permission()
+            for permission in self.permission_action_classes.get(
+                self.action, (IsAdmin,)
+            )
+        ]
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
@@ -310,7 +331,9 @@ class TradeViewSet(
         "partial_update": TradeUpdateSerializer,
     }
     permission_action_classes = {
+        "list": (IsAdmin | IsAnalyst | IsUser,),
         "retrieve": (IsAdmin | IsAnalyst | IsPortfolioOwner,),
+        "create": (IsAdmin | IsAnalyst | IsUser,),
         "update": (IsAdmin,),
         "partial_update": (IsAdmin,),
     }
@@ -325,9 +348,13 @@ class TradeViewSet(
 
         return TradeService().get_by_filters(portfolio__in=portfolios)
 
-    @property
-    def permission_classes(self):
-        return self.permission_action_classes.get(self.action, (AllowAny,))
+    def get_permissions(self):
+        return [
+            permission()
+            for permission in self.permission_action_classes.get(
+                self.action, (IsAdmin,)
+            )
+        ]
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
@@ -374,6 +401,7 @@ class RecommendationViewSet(
     permission_action_classes = {
         "list": (IsAdmin | IsAnalyst | IsUser,),
         "retrieve": (IsAdmin | IsAnalyst,),
+        "create": (IsAdmin | IsAnalyst | IsUser,),
         "update": (IsAdmin,),
         "partial_update": (IsAdmin,),
     }
@@ -393,9 +421,13 @@ class RecommendationViewSet(
             percentage__lte=RECOMMENDATION_THRESHOLD, investment__in=investment_ids
         )
 
-    @property
-    def permission_classes(self):
-        return self.permission_action_classes.get(self.action, (AllowAny,))
+    def get_permissions(self):
+        return [
+            permission()
+            for permission in self.permission_action_classes.get(
+                self.action, (IsAdmin,)
+            )
+        ]
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]

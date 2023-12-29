@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from users.models import User
-from users.permissions import IsAdmin
+from users.permissions import IsAdmin, IsAnalyst, IsUser
 from users.serializers import (
     ChangePasswordSerializer,
     UserCreateSerializer,
@@ -37,12 +37,19 @@ class UserViewSet(
         "retrieve": (IsAdmin,),
         "list": (IsAdmin,),
         "update": (IsAdmin,),
-        "partial_update": (IsAdmin,),
+        "register": (AllowAny,),
+        "login": (AllowAny,),
+        "change_password": (IsAdmin | IsUser | IsAnalyst,),
+        "set_subscription": (IsAdmin | IsUser | IsAnalyst,),
     }
 
-    @property
-    def permission_classes(self):
-        return self.permission_action_classes.get(self.action, (AllowAny,))
+    def get_permissions(self):
+        return [
+            permission()
+            for permission in self.permission_action_classes.get(
+                self.action, (IsAdmin,)
+            )
+        ]
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
