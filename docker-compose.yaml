@@ -22,7 +22,7 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
 
-  localstack:
+  localstack_app:
     container_name: "localstack"
     image: localstack/localstack
     env_file:
@@ -36,3 +36,17 @@ services:
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
     volumes:
       - ./localstack_entrypoint.sh:/etc/localstack/init/ready.d/localstack_entrypoint.sh
+
+  redis_app:
+    image: 'bitnami/redis:latest'
+    container_name: ${REDIS_HOST}
+    ports:
+      - ${REDIS_PORT}:6379
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+
+  celery_app:
+    build: .
+    container_name: celery
+    entrypoint:
+      - ./celery_entrypoint.sh

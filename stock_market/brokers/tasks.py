@@ -10,7 +10,7 @@ from brokers.utils import (
 )
 from django.db import IntegrityError
 
-from stock_market import settings
+from stock_market import celery_app, settings
 
 
 def limit_orders_trade() -> None:
@@ -45,14 +45,16 @@ def limit_orders_trade() -> None:
 
     order_service.bulk_update(completed_orders, ("status",))
 
-    send_mass_mail(completed_orders)
+    send_mass_mail.delay(completed_orders)
 
 
+@celery_app.task
 def send_mail(recipient: str):
     with Email() as email:
         email.send_welcome_mail(recipient)
 
 
+@celery_app.task
 def send_mass_mail(orders: list[LimitOrder]):
     with Email() as email:
         email.send_executed_orders(orders)
