@@ -1,5 +1,5 @@
 import smtplib
-from email.mime.text import MIMEText
+from email.message import EmailMessage
 
 from brokers.models import LimitOrder, OrderStatuses
 from brokers.utils import (
@@ -61,11 +61,11 @@ def send_mass_mail(orders: list[LimitOrder]):
 class Email:
     subject = "Trade Platform"
     sender = settings.EMAIL_HOST_USER
+    password = settings.EMAIL_HOST_PASSWORD
 
     def __enter__(self):
-        self.server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
-        self.server.starttls()
-        self.server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+        self.server = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        self.server.login(self.sender, self.password)
 
         return self
 
@@ -78,28 +78,25 @@ class Email:
         Thank you for choosing our trade platform
         """
 
-        message = self.__get_message_as_string(message, recipient)
-
-        self.server.sendmail(self.sender, recipient, message)
+        message = self.__get_email_message(message, recipient)
+        self.server.send_message(message)
 
     def send_executed_orders(self, orders: list[LimitOrder]):
         message_template = "Hey! You have bought %s!"
         messages = [
-            self.__get_message_as_string(
+            self.__get_email_message(
                 message_template % order.investment.name, order.portfolio.owner.email
             )
             for order in orders
         ]
 
-        [
-            self.server.sendmail(self.sender, order.portfolio.owner.email, message)
-            for message, order in zip(messages, orders)
-        ]
+        [self.server.send_message(message) for message in messages]
 
-    def __get_message_as_string(self, message: str, recipient: str) -> str:
-        message = MIMEText(message)
-        message["Subject"] = self.subject
-        message["From"] = self.sender
-        message["To"] = recipient
+    def __get_email_message(self, message: str, recipient: str) -> EmailMessage:
+        email = EmailMessage()
+        email["Subject"] = self.subject
+        email["From"] = self.sender
+        email["To"] = recipient
+        email.set_content(message)
 
-        return message.as_string()
+        return email
