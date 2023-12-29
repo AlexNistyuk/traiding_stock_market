@@ -11,5 +11,3 @@ COPY Pipfile.lock .
 RUN pipenv sync --system
 
 COPY . .
-
-RUN chmod +x entrypoint.sh
