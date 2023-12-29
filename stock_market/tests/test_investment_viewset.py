@@ -71,7 +71,7 @@ class InvestmentViewSetTest(TestCase):
             data={
                 "name": self.fake.name(),
                 "price": self.fake.pyint(),
-                "count": self.fake.pyint(),
+                "quantity": self.fake.pyint(),
                 "type": self.fake.random_choices(elements=InvestmentTypes.choices)[0][
                     0
                 ],
@@ -92,7 +92,7 @@ class InvestmentViewSetTest(TestCase):
             data={
                 "name": self.fake.name(),
                 "price": -self.fake.pyint(),
-                "count": self.fake.pyint(),
+                "quantity": self.fake.pyint(),
                 "type": self.fake.random_choices(elements=InvestmentTypes.choices)[0][
                     0
                 ],
@@ -111,7 +111,7 @@ class InvestmentViewSetTest(TestCase):
             data={
                 "name": self.fake.name(),
                 "price": -self.fake.pyint(),
-                "count": self.fake.pyint(),
+                "quantity": self.fake.pyint(),
                 "type": self.fake.name(),
             },
             content_type="application/json",

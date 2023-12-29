@@ -75,6 +75,12 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         )
 
 
+class UserSubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("subscriptions",)
+
+
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=30, write_only=True)
     password = serializers.CharField(max_length=128, write_only=True)
@@ -91,13 +97,6 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         model = User
         fields = ("old_password", "new_password", "new_repeated_password")
 
-    def create(self, validated_data):
-        user = self.context["request"].user
-        user.set_password(validated_data["new_password"])
-        user.save()
-
-        return user
-
     def validate(self, attrs):
         if attrs["new_password"] != attrs["new_repeated_password"]:
             raise serializers.ValidationError(
@@ -107,7 +106,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         return attrs
 
     def validate_old_password(self, password):
-        user = self.context["request"].user
+        user = self.context["request"].jwt_user
         if not user.check_password(password):
             raise serializers.ValidationError(
                 {"old_password": "Old password is incorrect!"}

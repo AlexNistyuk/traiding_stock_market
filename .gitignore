@@ -3,3 +3,4 @@
 /postgres_data
 /media
 **/__pycache__
+/stock_market/.coverage

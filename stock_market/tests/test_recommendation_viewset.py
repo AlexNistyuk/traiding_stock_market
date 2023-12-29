@@ -26,7 +26,7 @@ class RecommendationViewSetTest(TestCase):
         response = self.client.post(
             path=self.path,
             data={
-                "counter": self.fake.pyint(),
+                "percentage": self.fake.pyint(),
                 "investment": investment.id,
             },
         )
@@ -40,14 +40,14 @@ class RecommendationViewSetTest(TestCase):
         response_1 = self.client.post(
             path=self.path,
             data={
-                "counter": -self.fake.pyint(),
+                "percentage": -self.fake.pyint(),
                 "investment": investment.id,
             },
         )
         response_2 = self.client.post(
             path=self.path,
             data={
-                "counter": self.fake.pyint(),
+                "percentage": self.fake.pyint(),
                 "investment": investment.id,
             },
         )
@@ -74,7 +74,7 @@ class RecommendationViewSetTest(TestCase):
         response = self.client.put(
             path=path,
             data={
-                "counter": -self.fake.pyint(),
+                "percentage": -self.fake.pyint(),
                 "investment": recommendation.investment.id,
             },
             content_type="application/json",
@@ -92,7 +92,7 @@ class RecommendationViewSetTest(TestCase):
         response = self.client.put(
             path=path,
             data={
-                "count": -self.fake.pyint(),
+                "percentage": -self.fake.pyint(),
                 "investment": recommendation_1.investment.id,
             },
             content_type="application/json",

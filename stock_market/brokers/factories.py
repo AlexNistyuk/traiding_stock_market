@@ -24,7 +24,7 @@ class InvestmentFactory(DjangoModelFactory):
     name = factory.Faker("name")
     image = factory.django.ImageField(filename="test.png")
     price = factory.Faker("pyint")
-    count = factory.Faker("pyint")
+    quantity = factory.Faker("pyint")
     type = FuzzyTextChoice(choices=InvestmentTypes.choices)
 
     class Meta:
@@ -32,7 +32,7 @@ class InvestmentFactory(DjangoModelFactory):
 
 
 class InvestmentPortfolioFactory(DjangoModelFactory):
-    count = factory.Faker("pyint")
+    quantity = factory.Faker("pyint")
     spend_amount = factory.Faker("pyint")
     owner = factory.SubFactory(UserFactory)
     investment = factory.SubFactory(InvestmentFactory)
@@ -42,8 +42,7 @@ class InvestmentPortfolioFactory(DjangoModelFactory):
 
 
 class OrderFactory(DjangoModelFactory):
-    count = factory.Faker("pyint")
-    is_sell = factory.Faker("boolean")
+    quantity = factory.Faker("pyint")
     status = FuzzyTextChoice(choices=OrderStatuses.choices)
     portfolio = factory.SubFactory(InvestmentPortfolioFactory)
     investment = factory.SubFactory(InvestmentFactory)
@@ -63,10 +62,9 @@ class LimitOrderFactory(OrderFactory):
 
 
 class TradeFactory(DjangoModelFactory):
-    count = factory.Faker("pyint")
+    quantity = factory.Faker("pyint")
     price = factory.Faker("pyint")
-    seller = factory.SubFactory(InvestmentPortfolioFactory)
-    buyer = factory.SubFactory(InvestmentPortfolioFactory)
+    portfolio = factory.SubFactory(InvestmentPortfolioFactory)
     investment = factory.SubFactory(InvestmentFactory)
 
     class Meta:
@@ -74,7 +72,7 @@ class TradeFactory(DjangoModelFactory):
 
 
 class RecommendationFactory(DjangoModelFactory):
-    counter = factory.Faker("pyint")
+    percentage = factory.Faker("pyint")
     investment = factory.SubFactory(InvestmentFactory)
 
     class Meta:

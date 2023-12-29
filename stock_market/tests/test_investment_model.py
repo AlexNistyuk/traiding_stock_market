@@ -38,11 +38,11 @@ class InvestmentModelTest(TestCase):
         self.assertEqual(investment_count + 1, self.investment_count())
         self.assertRaises(IntegrityError, investment.save)
 
-    def test_update_investment_with_negative_count(self):
+    def test_update_investment_with_negative_quantity(self):
         investment_count = self.investment_count()
 
         investment = self.new_investment()
-        investment.count = -self.fake.pyint()
+        investment.quantity = -self.fake.pyint()
 
         self.assertEqual(investment_count + 1, self.investment_count())
         self.assertRaises(IntegrityError, investment.save)

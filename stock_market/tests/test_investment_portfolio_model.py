@@ -30,17 +30,17 @@ class InvestmentPortfolioModelTest(TestCase):
         self.assertEqual(portfolio_count + 1, self.portfolio_count())
         self.assertRaises(IntegrityError, portfolio.save)
 
-    def test_update_portfolio_with_negative_count(self):
+    def test_update_portfolio_with_negative_quantity(self):
         portfolio_count = self.portfolio_count()
 
         portfolio = self.new_portfolio()
 
-        portfolio.count = -self.fake.pyint()
+        portfolio.quantity = -self.fake.pyint()
 
         self.assertEqual(portfolio_count + 1, self.portfolio_count())
         self.assertRaises(IntegrityError, portfolio.save)
 
-    def test_portfolio_count_desc_ordering(self):
+    def test_portfolio_quantity_desc_ordering(self):
         portfolio_count = self.portfolio_count()
 
         portfolio_1 = self.new_portfolio()
@@ -48,8 +48,8 @@ class InvestmentPortfolioModelTest(TestCase):
 
         portfolio_list = [portfolio_1, portfolio_2]
 
-        max_item = max(portfolio_list, key=lambda x: x.count)
-        min_item = min(portfolio_list, key=lambda x: x.count)
+        max_item = max(portfolio_list, key=lambda x: x.quantity)
+        min_item = min(portfolio_list, key=lambda x: x.quantity)
 
         result = InvestmentPortfolio.objects.all()
 
