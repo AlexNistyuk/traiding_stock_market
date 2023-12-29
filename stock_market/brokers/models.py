@@ -158,7 +158,7 @@ class Trade(models.Model):
 
 
 class Recommendation(models.Model):
-    counter = models.IntegerField(default=0)
+    percentage = models.IntegerField(default=0)
     investment = models.OneToOneField(
         "Investment", on_delete=models.CASCADE, db_index=True
     )
