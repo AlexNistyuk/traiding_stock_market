@@ -59,6 +59,7 @@ class InvestmentUpdateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
+            "name",
             "created_at",
             "updated_at",
         )
@@ -290,7 +291,7 @@ class RecommendationCreateSerializer(serializers.ModelSerializer):
         model = Recommendation
         fields = (
             "id",
-            "counter",
+            "percentage",
             "investment",
             "created_at",
             "updated_at",
@@ -307,7 +308,7 @@ class RecommendationRetrieveSerializer(serializers.ModelSerializer):
         model = Recommendation
         fields = (
             "id",
-            "counter",
+            "percentage",
             "investment",
             "created_at",
             "updated_at",
@@ -319,7 +320,7 @@ class RecommendationUpdateSerializer(serializers.ModelSerializer):
         model = Recommendation
         fields = (
             "id",
-            "counter",
+            "percentage",
             "investment",
             "created_at",
             "updated_at",

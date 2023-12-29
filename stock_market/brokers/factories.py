@@ -72,7 +72,7 @@ class TradeFactory(DjangoModelFactory):
 
 
 class RecommendationFactory(DjangoModelFactory):
-    counter = factory.Faker("pyint")
+    percentage = factory.Faker("pyint")
     investment = factory.SubFactory(InvestmentFactory)
 
     class Meta:

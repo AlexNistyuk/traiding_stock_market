@@ -1,3 +1,6 @@
+from decimal import Decimal
+from math import ceil
+
 from brokers.models import (
     Investment,
     InvestmentPortfolio,
@@ -5,6 +8,7 @@ from brokers.models import (
     MarketOrder,
     OrderActivatedStatuses,
     OrderStatuses,
+    Recommendation,
     Trade,
 )
 from django.db import IntegrityError, transaction
@@ -13,9 +17,46 @@ from django.http import Http404
 from users.utils import IService
 
 
-class InvestmentService:
+class InvestmentService(IService):
+    def __init__(self, validated_data: dict = None, instance: Investment = None):
+        self.data = validated_data
+        self.instance = instance
+
     def get_by_filters(self, **filters):
         return Investment.objects.filter(**filters)
+
+    def create(self):
+        return Investment.objects.create(**self.data)
+
+    def update(self):
+        self.instance.image = self.data.get("image", self.instance.image)
+        self.instance.price = self.data["price"]
+        self.instance.quantity = self.data["quantity"]
+        self.instance.type = self.data["type"]
+        self.instance.save()
+
+        return self.instance
+
+    def get_by_id_or_404(self, investment_id: int):
+        try:
+            return Investment.objects.get(id=investment_id)
+        except Investment.DoesNotExist:
+            raise Http404
+
+    def delete(self, investment: Investment):
+        return investment.delete()
+
+    def get_all(self):
+        return Investment.objects.all()
+
+    def bulk_create(self, investments: list[Investment]):
+        return Investment.objects.bulk_create(investments)
+
+    def bulk_update(self, investments: list[Investment]):
+        return Investment.objects.bulk_update(investments)
+
+    def get_percentage(self, old_price: Decimal, new_price: Decimal):
+        return ceil((new_price - old_price) / old_price * 100)
 
 
 class InvestmentPortfolioService(IService):
@@ -63,6 +104,13 @@ class InvestmentPortfolioService(IService):
 
     def get_by_filters(self, **filters):
         return InvestmentPortfolio.objects.select_related("owner").filter(**filters)
+
+    def get_by_filters_and_values(self, *values, **filters):
+        return (
+            InvestmentPortfolio.objects.select_related("owner")
+            .filter(**filters)
+            .values(*values)
+        )
 
 
 class OrderService(IService):
@@ -182,6 +230,47 @@ class TradeService(IService):
         )
 
 
+class RecommendationService(IService):
+    def __init__(self, validated_data: dict = None, instance: Recommendation = None):
+        self.data = validated_data
+        self.instance = instance
+
+    def create(self):
+        self.data["investment"] = self.data["investment"]
+
+        return Recommendation.objects.create(**self.data)
+
+    def update(self):
+        self.instance.percentage = self.data["percentage"]
+        self.instance.save()
+
+        return self.instance
+
+    def get_by_id_or_404(self, recommendation_id: int):
+        try:
+            return Recommendation.objects.get(id=recommendation_id)
+        except Recommendation.DoesNotExist:
+            raise Http404
+
+    def delete(self, recommendation: Recommendation):
+        return recommendation.delete()
+
+    def get_all(self):
+        return Recommendation.objects.select_related("investment").all()
+
+    def bulk_create(self, recommendations: list[Recommendation]):
+        return Recommendation.objects.bulk_create(recommendations)
+
+    def bulk_update(self, recommendations: list[Recommendation]):
+        return Recommendation.objects.bulk_update(recommendations)
+
+    def get_by_filters(self, **filters):
+        return Recommendation.objects.select_related("investment").filter(**filters)
+
+    def get_or_create(self, **filters):
+        return Recommendation.objects.get_or_create(**filters)
+
+
 class LimitOrderTrade:
     def get_orders(self, investment: Investment):
         """Return executable limit orders"""
@@ -213,6 +302,9 @@ class LimitOrderTrade:
                 )
             )
         )
+
+    def get_all_recommendations(self):
+        return Recommendation.objects.filter()
 
 
 class TradeMaker:

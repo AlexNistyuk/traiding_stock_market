@@ -30,8 +30,10 @@ from brokers.serializers import (
 )
 from brokers.utils import (
     InvestmentPortfolioService,
+    InvestmentService,
     LimitOrderService,
     MarketOrderService,
+    RecommendationService,
     TradeMaker,
     TradeService,
 )
@@ -41,7 +43,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from users.exceptions import Http400
 from users.models import Roles
-from users.permissions import IsAdmin, IsAnalyst, IsOwner
+from users.permissions import IsAdmin, IsAnalyst, IsOwner, IsUser
+
+from stock_market.settings import RECOMMENDATION_THRESHOLD
 
 
 class InvestmentViewSet(
@@ -71,6 +75,39 @@ class InvestmentViewSet(
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        validated_data = serializer.validated_data
+        instance = InvestmentService(validated_data).create()
+        RecommendationService({"investment": instance}).create()
+
+        data = self.get_serializer(instance).data
+
+        return Response(data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = InvestmentService().get_by_id_or_404(self.kwargs["pk"])
+        self.check_object_permissions(self.request, instance)
+
+        old_price = instance.price
+
+        instance = InvestmentService(
+            serializer.validated_data, instance=instance
+        ).update()
+        percentage = InvestmentService().get_percentage(old_price, instance.price)
+
+        recommendation, _ = RecommendationService().get_or_create(investment=instance)
+        RecommendationService({"percentage": percentage}, recommendation).update()
+
+        data = self.get_serializer(instance).data
+
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class MarketOrderViewSet(
@@ -334,13 +371,27 @@ class RecommendationViewSet(
         "update": RecommendationUpdateSerializer,
         "partial_update": RecommendationUpdateSerializer,
     }
-    # TODO if not admin, return not all recommendations, only user's recommendations
     permission_action_classes = {
-        "list": (IsAdmin | IsAnalyst,),
+        "list": (IsAdmin | IsAnalyst | IsUser,),
         "retrieve": (IsAdmin | IsAnalyst,),
         "update": (IsAdmin,),
         "partial_update": (IsAdmin,),
     }
+
+    def get_queryset(self):
+        if self.request.jwt_user.role in (Roles.ADMIN, Roles.ANALYST):
+            return RecommendationService().get_by_filters(
+                percentage__lte=RECOMMENDATION_THRESHOLD
+            )
+
+        result = InvestmentPortfolioService().get_by_filters_and_values(
+            "investment", owner=self.request.jwt_user
+        )
+        investment_ids = [item["investment"] for item in result]
+
+        return RecommendationService().get_by_filters(
+            percentage__lte=RECOMMENDATION_THRESHOLD, investment__in=investment_ids
+        )
 
     @property
     def permission_classes(self):
