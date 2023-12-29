@@ -12,9 +12,9 @@ from brokers.models import (
     Trade,
 )
 from django.db import IntegrityError, transaction
-from django.db.models import Count, F, Q
+from django.db.models import Count, F
 from django.http import Http404
-from users.utils import IService
+from utils.interfaces import IService
 
 
 class InvestmentService(IService):
@@ -269,42 +269,6 @@ class RecommendationService(IService):
 
     def get_or_create(self, **filters):
         return Recommendation.objects.get_or_create(**filters)
-
-
-class LimitOrderTrade:
-    def get_orders(self, investment: Investment):
-        """Return executable limit orders"""
-        return LimitOrderService().get_by_filters(
-            Q(
-                investment=investment,
-                status=OrderStatuses.ACTIVE,
-                quantity__lte=investment.quantity,
-            )
-            & (
-                Q(
-                    price__gte=investment.price,
-                    activated_status__in=[
-                        OrderActivatedStatuses.LTE,
-                        OrderActivatedStatuses.EQUAL,
-                    ],
-                )
-                | Q(
-                    price__gt=investment.price,
-                    activated_status=OrderActivatedStatuses.LT,
-                )
-                | Q(
-                    price__lte=investment.price,
-                    activated_status=OrderActivatedStatuses.GTE,
-                )
-                | Q(
-                    price__lt=investment.price,
-                    activated_status=OrderActivatedStatuses.GT,
-                )
-            )
-        )
-
-    def get_all_recommendations(self):
-        return Recommendation.objects.filter()
 
 
 class TradeMaker:

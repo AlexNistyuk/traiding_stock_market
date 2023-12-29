@@ -1,38 +1,7 @@
-import abc
-
 from django.http import Http404
 from users.exceptions import Http400
 from users.models import User
-
-
-class IService(abc.ABC):
-    @abc.abstractmethod
-    def create(self, *args, **kwargs):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def update(self, *args, **kwargs):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_by_id_or_404(self, *args, **kwargs):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def delete(self, *args, **kwargs):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_all(self, *args, **kwargs):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def bulk_create(self, *args, **kwargs):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def bulk_update(self, *args, **kwargs):
-        raise NotImplementedError
+from utils.interfaces import IService
 
 
 class UserService(IService):
