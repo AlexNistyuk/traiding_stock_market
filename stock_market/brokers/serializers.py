@@ -327,6 +327,7 @@ class RecommendationUpdateSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = (
+            "investment",
             "created_at",
             "updated_at",
         )
