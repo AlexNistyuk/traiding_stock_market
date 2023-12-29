@@ -1,7 +1,12 @@
-from brokers.models import Investment, OrderActivatedStatuses, OrderStatuses
+import smtplib
+from email.message import EmailMessage
+
+from brokers.models import Investment, LimitOrder, OrderActivatedStatuses, OrderStatuses
 from brokers.utils import InvestmentService, LimitOrderService, TradeMaker
 from django.db import IntegrityError
 from django.db.models import Q
+
+from stock_market import settings
 
 
 class LimitOrderTrade:
@@ -36,6 +41,7 @@ class LimitOrderTrade:
                         break
 
         order_service.bulk_update(completed_orders, ("status",))
+        Sender().send_mass_mail(completed_orders)
 
     def __get_orders(self, investment: Investment):
         """Return executable limit orders"""
@@ -67,3 +73,61 @@ class LimitOrderTrade:
                 )
             )
         )
+
+
+class Sender:
+    """Send messages on emails"""
+
+    def send_mass_mail(self, orders: list[LimitOrder]):
+        with Email() as email:
+            email.send_executed_orders(orders)
+
+    def send_mail(self, recipient: str):
+        with Email() as email:
+            email.send_welcome_mail(recipient)
+
+
+class Email:
+    subject = "Trade Platform"
+    sender = settings.EMAIL_HOST_USER
+    password = settings.EMAIL_HOST_PASSWORD
+
+    def __enter__(self):
+        self.server = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        self.server.login(self.sender, self.password)
+
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.server.quit()
+
+    def __get_welcome_message(self):
+        return """
+        Hi! You have been successfully registered!
+        Thank you for choosing our trade platform
+        """
+
+    def send_welcome_mail(self, recipient: str):
+        welcome_message = self.__get_welcome_message()
+        message = self.__get_email_message(welcome_message, recipient)
+        self.server.send_message(message)
+
+    def send_executed_orders(self, orders: list[LimitOrder]):
+        message_template = "Hey! You have bought %s!"
+        messages = [
+            self.__get_email_message(
+                message_template % order.investment.name, order.portfolio.owner.email
+            )
+            for order in orders
+        ]
+
+        [self.server.send_message(message) for message in messages]
+
+    def __get_email_message(self, message: str, recipient: str) -> EmailMessage:
+        email = EmailMessage()
+        email["Subject"] = self.subject
+        email["From"] = self.sender
+        email["To"] = recipient
+        email.set_content(message)
+
+        return email
