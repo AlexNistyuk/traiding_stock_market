@@ -4,7 +4,7 @@ services:
     image: stock_market
     build: .
     ports:
-      - "${WEB_PORT}:${WEB_PORT}"
+      - ${WEB_PORT}:${WEB_PORT}
     env_file:
       - .env
     entrypoint:
@@ -19,7 +19,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - ${POSTGRES_PORT}:5432
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
 
@@ -29,7 +29,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${AWS_PORT}:4566"
+      - ${AWS_PORT}:4566
     environment:
       - SERVICES=s3
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
@@ -40,7 +40,7 @@ services:
       - ./localstack-entrypoint.sh:/etc/localstack/init/ready.d/localstack-entrypoint.sh
 
   redis_app:
-    image: 'bitnami/redis:latest'
+    image: bitnami/redis:latest
     container_name: ${REDIS_HOST}
     ports:
       - ${REDIS_PORT}:6379
