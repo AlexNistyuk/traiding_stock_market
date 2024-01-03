@@ -6,7 +6,7 @@ from brokers.utils import InvestmentService, LimitOrderService, TradeMaker
 from django.db import IntegrityError
 from django.db.models import Q
 
-from stock_market import settings
+from stock_market import celery_app, settings
 
 
 class LimitOrderTrade:
@@ -41,7 +41,7 @@ class LimitOrderTrade:
                         break
 
         order_service.bulk_update(completed_orders, ("status",))
-        Sender().send_mass_mail(completed_orders)
+        Sender.send_mass_mail.delay(completed_orders)
 
     def __get_orders(self, investment: Investment):
         """Return executable limit orders"""
@@ -78,11 +78,15 @@ class LimitOrderTrade:
 class Sender:
     """Send messages on emails"""
 
-    def send_mass_mail(self, orders: list[LimitOrder]):
+    @staticmethod
+    @celery_app.task
+    def send_mass_mail(orders: list[LimitOrder]):
         with Email() as email:
             email.send_executed_orders(orders)
 
-    def send_mail(self, recipient: str):
+    @staticmethod
+    @celery_app.task
+    def send_mail(recipient: str):
         with Email() as email:
             email.send_welcome_mail(recipient)
 

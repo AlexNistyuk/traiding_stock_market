@@ -4,13 +4,14 @@ services:
     image: stock_market
     build: .
     ports:
-      - "${WEB_PORT}:${WEB_PORT}"
+      - ${WEB_PORT}:${WEB_PORT}
     env_file:
       - .env
     entrypoint:
-      - ./entrypoint.sh
+      - ./django-entrypoint.sh
     depends_on:
       - postgres_app
+      - redis_app
 
   postgres_app:
     image: postgres:alpine
@@ -18,21 +19,39 @@ services:
     env_file:
       - .env
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
 
-  localstack:
-    container_name: "localstack"
+  localstack_app:
+    container_name: ${AWS_HOST}
     image: localstack/localstack
     env_file:
       - .env
     ports:
-      - "${AWS_PORT}:4566"
+      - ${AWS_PORT}:${AWS_PORT}
     environment:
       - SERVICES=s3
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - DEBUG=0
     volumes:
-      - ./localstack_entrypoint.sh:/etc/localstack/init/ready.d/localstack_entrypoint.sh
+      - ./localstack-entrypoint.sh:/etc/localstack/init/ready.d/localstack-entrypoint.sh
+
+  redis_app:
+    image: bitnami/redis:latest
+    container_name: ${REDIS_HOST}
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+
+  celery_app:
+    image: stock_market
+    container_name: celery
+    entrypoint:
+      - ./celery-entrypoint.sh
+    depends_on:
+      - redis_app
+      - django_app

@@ -73,7 +73,7 @@ class UserViewSet(
 
         instance = UserService(serializer.validated_data).create()
 
-        Sender().send_mail(instance.email)
+        Sender.send_mail.delay(instance.email)
 
         data = self.get_serializer(instance).data
 
