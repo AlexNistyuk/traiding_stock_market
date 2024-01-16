@@ -442,6 +442,7 @@ class KafkaViewSet(viewsets.GenericViewSet):
         tickers = request.data.get(KAFKA_REQUEST_KEY)
         if not tickers:
             message = f"Request body does not have data in '{KAFKA_REQUEST_KEY}' key"
+
             raise Http400(detail={"detail": message})
 
         MessageBrokerHandler.handle(tickers)
