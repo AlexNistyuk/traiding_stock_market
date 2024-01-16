@@ -55,3 +55,36 @@ services:
     depends_on:
       - redis_app
       - django_app
+
+  zookeeper_app:
+    image: confluentinc/cp-zookeeper:7.2.1
+    container_name: ${ZOOKEEPER_HOST}
+    ports:
+      - ${ZOOKEEPER_PORT}:${ZOOKEEPER_PORT}
+    environment:
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_PORT}
+      ZOOKEEPER_TICK_TIME: ${ZOOKEEPER_TICK_TIME}
+
+  kafka_app:
+    image: confluentinc/cp-server:7.2.1
+    container_name: ${KAFKA_HOST}
+    depends_on:
+      - zookeeper_app
+    ports:
+      - ${KAFKA_PORT}:${KAFKA_PORT}
+    environment:
+      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID}
+      KAFKA_ZOOKEEPER_CONNECT: ${ZOOKEEPER_HOST}:${ZOOKEEPER_PORT}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_HOST}:29092,PLAINTEXT_HOST://${KAFKA_HOST}:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+
+  kafka_consumer_app:
+    image: stock_market
+    build: .
+    container_name: kafka-consumer
+    entrypoint:
+      - ./kafka-consumer-entrypoint.sh
+    depends_on:
+      - kafka_app
+      - django_app

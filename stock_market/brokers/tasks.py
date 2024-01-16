@@ -2,17 +2,34 @@ import smtplib
 from email.message import EmailMessage
 
 from brokers.models import Investment, LimitOrder, OrderActivatedStatuses, OrderStatuses
-from brokers.utils import InvestmentService, LimitOrderService, TradeMaker
+from brokers.utils import (
+    InvestmentService,
+    InvestmentUpdateService,
+    LimitOrderService,
+    TradeMaker,
+)
 from django.db import IntegrityError
 from django.db.models import Q
 
 from stock_market import celery_app, settings
 
 
+class MessageBrokerHandler:
+    """Handle messages from message brokers"""
+
+    @staticmethod
+    @celery_app.task
+    def handle(tickers: list[dict]):
+        InvestmentUpdateService().update(tickers)
+        LimitOrderTrade().make_orders()
+
+
 class LimitOrderTrade:
     """Make executable limit orders"""
 
-    def make_orders(self) -> None:
+    @staticmethod
+    @celery_app.task
+    def make_orders() -> None:
         order_service = LimitOrderService()
 
         result = order_service.get_group_by_investment()
@@ -24,7 +41,7 @@ class LimitOrderTrade:
         trade_maker = TradeMaker()
         completed_orders = []
         for investment in investments:
-            orders = self.__get_orders(investment)
+            orders = LimitOrderTrade.__get_orders(investment)
 
             for i, order in enumerate(orders):
                 try:
@@ -43,7 +60,8 @@ class LimitOrderTrade:
         order_service.bulk_update(completed_orders, ("status",))
         Sender.send_mass_mail.delay(completed_orders)
 
-    def __get_orders(self, investment: Investment):
+    @staticmethod
+    def __get_orders(investment: Investment):
         """Return executable limit orders"""
         return LimitOrderService().get_by_filters(
             Q(

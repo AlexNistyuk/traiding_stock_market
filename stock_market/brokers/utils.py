@@ -1,6 +1,3 @@
-from decimal import Decimal
-from math import ceil
-
 from brokers.models import (
     Investment,
     InvestmentPortfolio,
@@ -52,11 +49,8 @@ class InvestmentService(IService):
     def bulk_create(self, investments: list[Investment]):
         return Investment.objects.bulk_create(investments)
 
-    def bulk_update(self, investments: list[Investment]):
-        return Investment.objects.bulk_update(investments)
-
-    def get_percentage(self, old_price: Decimal, new_price: Decimal):
-        return ceil((new_price - old_price) / old_price * 100)
+    def bulk_update(self, investments: list[Investment], *args):
+        return Investment.objects.bulk_update(investments, *args)
 
 
 class InvestmentPortfolioService(IService):
@@ -261,8 +255,8 @@ class RecommendationService(IService):
     def bulk_create(self, recommendations: list[Recommendation]):
         return Recommendation.objects.bulk_create(recommendations)
 
-    def bulk_update(self, recommendations: list[Recommendation]):
-        return Recommendation.objects.bulk_update(recommendations)
+    def bulk_update(self, recommendations: list[Recommendation], *args):
+        return Recommendation.objects.bulk_update(recommendations, *args)
 
     def get_by_filters(self, **filters):
         return Recommendation.objects.select_related("investment").filter(**filters)
@@ -351,3 +345,38 @@ class TradeMaker:
         ):
             return True
         return False
+
+
+class InvestmentUpdateService:
+    """Update investments and recommendations"""
+
+    investment_service = InvestmentService()
+    recommendation_service = RecommendationService()
+
+    def update(self, tickers: list[dict]):
+        tickers = self.__change_tickers(tickers)
+        investments_names = tickers.keys()
+
+        recommendations = self.recommendation_service.get_by_filters(
+            investment__name__in=investments_names
+        )
+        investments = []
+        for recommendation in recommendations:
+            investment = recommendation.investment
+            investment.price = tickers[investment.name]["price"]
+            recommendation.percentage = tickers[investment.name]["percentage"]
+
+            investments.append(investment)
+
+        self.investment_service.bulk_update(investments, ["price"])
+        self.recommendation_service.bulk_update(recommendations, ["percentage"])
+
+    def __change_tickers(self, tickers: list[dict]) -> dict:
+        new_tickers = {}
+        for ticker in tickers:
+            new_tickers[ticker["symbol"]] = {
+                "price": ticker["price"],
+                "percentage": int(ticker["change_percentage"]),
+            }
+
+        return new_tickers

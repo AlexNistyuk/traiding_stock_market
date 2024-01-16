@@ -7,7 +7,6 @@ name = "pypi"
 django = "*"
 djangorestframework = "*"
 pyjwt = "*"
-pre-commit = "*"
 django-environ = "*"
 psycopg2-binary = "*"
 pillow = "*"
@@ -15,8 +14,11 @@ boto3 = "*"
 django-storages = "*"
 celery = "*"
 redis = "*"
+aiokafka = "*"
 
 [dev-packages]
+factory-boy = "*"
+pre-commit = "*"
 
 [requires]
 python_version = "3.11"

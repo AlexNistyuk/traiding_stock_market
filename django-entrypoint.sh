@@ -1,3 +1,4 @@
 #!/bin/bash
 
-python3 stock_market/manage.py runserver $WEB_HOST:$WEB_PORT
+python stock_market/manage.py migrate
+python stock_market/manage.py runserver $WEB_HOST:$WEB_PORT
