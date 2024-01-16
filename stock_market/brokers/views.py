@@ -28,6 +28,7 @@ from brokers.serializers import (
     TradeRetrieveSerializer,
     TradeUpdateSerializer,
 )
+from brokers.tasks import MessageBrokerHandler
 from brokers.utils import (
     InvestmentPortfolioService,
     InvestmentService,
@@ -44,7 +45,7 @@ from users.exceptions import Http400
 from users.models import Roles
 from users.permissions import IsAdmin, IsAnalyst, IsOwner, IsUser
 
-from stock_market.settings import RECOMMENDATION_THRESHOLD
+from stock_market.settings import KAFKA_REQUEST_KEY, RECOMMENDATION_THRESHOLD
 
 
 class InvestmentViewSet(
@@ -431,3 +432,19 @@ class RecommendationViewSet(
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
+
+
+class KafkaViewSet(viewsets.GenericViewSet):
+    permission_classes = []
+
+    @action(methods=["put"], detail=False, url_path="update")
+    def update_investments(self, request, *args, **kwargs):
+        tickers = request.data.get(KAFKA_REQUEST_KEY)
+        if not tickers:
+            message = f"Request body does not have data in '{KAFKA_REQUEST_KEY}' key"
+            raise Http400(detail={"detail": message})
+
+        MessageBrokerHandler.handle(tickers)
+        # MessageBrokerHandler.handle.delay(tickers)
+
+        return Response(status=status.HTTP_200_OK)

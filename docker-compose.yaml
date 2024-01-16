@@ -8,7 +8,7 @@ services:
     env_file:
       - .env
     entrypoint:
-      - ./django-entrypoint.sh
+      - ./entrypoints/django.sh
     depends_on:
       - postgres_app
       - redis_app
@@ -37,7 +37,7 @@ services:
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
       - DEBUG=0
     volumes:
-      - ./localstack-entrypoint.sh:/etc/localstack/init/ready.d/localstack-entrypoint.sh
+      - ./entrypoints/localstack.sh:/etc/localstack/init/ready.d/localstack.sh
 
   redis_app:
     image: bitnami/redis:latest
@@ -51,7 +51,7 @@ services:
     image: stock_market
     container_name: celery
     entrypoint:
-      - ./celery-entrypoint.sh
+      - ./entrypoints/celery.sh
     depends_on:
       - redis_app
       - django_app
@@ -84,7 +84,7 @@ services:
     build: .
     container_name: kafka-consumer
     entrypoint:
-      - ./kafka-consumer-entrypoint.sh
+      - ./kafka-consumer.sh
     depends_on:
       - kafka_app
       - django_app

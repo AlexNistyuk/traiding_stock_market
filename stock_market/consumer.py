@@ -39,7 +39,7 @@ class Consumer:
 
     async def __send_tickers(self, tickers: list[dict]):
         async with aiohttp.ClientSession() as session:
-            await session.post(url=self.url, data=tickers, headers=self.headers)
+            await session.put(url=self.url, data=tickers, headers=self.headers)
 
 
 async def consume():

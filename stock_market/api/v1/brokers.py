@@ -1,6 +1,7 @@
 from brokers.views import (
     InvestmentPortfolioViewSet,
     InvestmentViewSet,
+    KafkaViewSet,
     LimitOrderViewSet,
     MarketOrderViewSet,
     RecommendationViewSet,
@@ -26,9 +27,13 @@ trade_router.register(r"trades", TradeViewSet)
 recommendation_router = DefaultRouter()
 recommendation_router.register(r"recommendations", RecommendationViewSet)
 
+kafka_update_router = DefaultRouter()
+kafka_update_router.register(r"kafka", KafkaViewSet, basename="kafka")
+
 urlpatterns = investment_router.urls
 urlpatterns += market_order_router.urls
 urlpatterns += limit_order_router.urls
 urlpatterns += investment_portfolio_router.urls
 urlpatterns += trade_router.urls
 urlpatterns += recommendation_router.urls
+urlpatterns += kafka_update_router.urls
