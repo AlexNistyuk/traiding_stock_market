@@ -1,13 +1,23 @@
 import asyncio
 import json
 
+import aiohttp
 from aiokafka import AIOKafkaConsumer
-from brokers.tasks import MessageBrokerHandler
 
-from stock_market.settings import CONSUMER_GROUP, KAFKA_TOPIC, KAFKA_URL
+from stock_market.settings import (
+    CONSUMER_GROUP,
+    KAFKA_ENDPOINT,
+    KAFKA_TOPIC,
+    KAFKA_URL,
+    WEB_HOST,
+    WEB_PORT,
+)
 
 
 class Consumer:
+    url = f"http://{WEB_HOST}:{WEB_PORT}{KAFKA_ENDPOINT}"
+    headers = {"Content-Type": "application/json"}
+
     async def __aenter__(self):
         self.consumer = AIOKafkaConsumer(
             KAFKA_TOPIC,
@@ -15,8 +25,6 @@ class Consumer:
             bootstrap_servers=KAFKA_URL,
         )
         await self.consumer.start()
-
-        self.message_handler = MessageBrokerHandler()
 
         return self
 
@@ -27,7 +35,11 @@ class Consumer:
         async for msg in self.consumer:
             tickers: list[dict] = json.loads(msg.value)
 
-            self.message_handler.handle.delay(tickers)
+            await self.__send_tickers(tickers)
+
+    async def __send_tickers(self, tickers: list[dict]):
+        async with aiohttp.ClientSession() as session:
+            await session.post(url=self.url, data=tickers, headers=self.headers)
 
 
 async def consume():

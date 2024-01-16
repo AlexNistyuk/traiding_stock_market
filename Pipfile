@@ -15,6 +15,7 @@ django-storages = "*"
 celery = "*"
 redis = "*"
 aiokafka = "*"
+aiohttp = "*"
 
 [dev-packages]
 factory-boy = "*"
