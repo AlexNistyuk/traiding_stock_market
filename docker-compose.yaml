@@ -1,7 +1,6 @@
-version: "3.3"
+version: "3.8"
 services:
   django_app:
-    image: stock_market
     build: .
     container_name: ${WEB_HOST}
     ports:
