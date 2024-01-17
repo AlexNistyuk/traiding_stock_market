@@ -1,3 +1,6 @@
+from decimal import Decimal
+from math import ceil
+
 from brokers.models import (
     Investment,
     InvestmentPortfolio,
@@ -51,6 +54,9 @@ class InvestmentService(IService):
 
     def bulk_update(self, investments: list[Investment], *args):
         return Investment.objects.bulk_update(investments, *args)
+
+    def get_percentage(self, old_price: Decimal, new_price: Decimal):
+        return ceil((new_price - old_price) / old_price * 100)
 
 
 class InvestmentPortfolioService(IService):

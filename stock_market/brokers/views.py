@@ -7,7 +7,7 @@ from brokers.models import (
     Recommendation,
     Trade,
 )
-from brokers.permissions import IsPortfolioOwner
+from brokers.permissions import IsKafkaUser, IsPortfolioOwner
 from brokers.serializers import (
     InvestmentCreateSerializer,
     InvestmentPortfolioCreateSerializer,
@@ -435,7 +435,7 @@ class RecommendationViewSet(
 
 
 class KafkaViewSet(viewsets.GenericViewSet):
-    permission_classes = []
+    permission_classes = (IsKafkaUser,)
 
     @action(methods=["put"], detail=False, url_path="update")
     def update_investments(self, request, *args, **kwargs):
@@ -445,7 +445,6 @@ class KafkaViewSet(viewsets.GenericViewSet):
 
             raise Http400(detail={"detail": message})
 
-        MessageBrokerHandler.handle(tickers)
-        # MessageBrokerHandler.handle.delay(tickers)
+        MessageBrokerHandler.handle.delay(tickers)
 
         return Response(status=status.HTTP_200_OK)
