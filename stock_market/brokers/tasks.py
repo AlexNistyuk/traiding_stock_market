@@ -1,7 +1,7 @@
 import smtplib
 from email.message import EmailMessage
 
-from brokers.models import Investment, LimitOrder, OrderActivatedStatuses, OrderStatuses
+from brokers.models import Investment, OrderActivatedStatuses, OrderStatuses
 from brokers.utils import (
     InvestmentService,
     InvestmentUpdateService,
@@ -12,13 +12,14 @@ from django.db import IntegrityError
 from django.db.models import Q
 
 from stock_market import celery_app, settings
+from stock_market.settings import CELERY_QUEUE
 
 
 class MessageBrokerHandler:
     """Handle messages from message brokers"""
 
     @staticmethod
-    @celery_app.task
+    @celery_app.task(queue=CELERY_QUEUE)
     def handle(tickers: list[dict]):
         InvestmentUpdateService().update(tickers)
         LimitOrderTrade().make_orders()
@@ -28,7 +29,7 @@ class LimitOrderTrade:
     """Make executable limit orders"""
 
     @staticmethod
-    @celery_app.task
+    @celery_app.task(queue=CELERY_QUEUE)
     def make_orders() -> None:
         order_service = LimitOrderService()
 
@@ -40,6 +41,7 @@ class LimitOrderTrade:
 
         trade_maker = TradeMaker()
         completed_orders = []
+        completed_orders_data = []
         for investment in investments:
             orders = LimitOrderTrade.__get_orders(investment)
 
@@ -51,6 +53,12 @@ class LimitOrderTrade:
 
                 order.status = OrderStatuses.COMPLETED
                 completed_orders.append(order)
+                completed_orders_data.append(
+                    {
+                        "investment": investment.name,
+                        "recipient": order.portfolio.owner.email,
+                    }
+                )
 
                 if i < len(orders) - 1:
                     investment.refresh_from_db()
@@ -59,7 +67,7 @@ class LimitOrderTrade:
 
         if completed_orders:
             order_service.bulk_update(completed_orders, ("status",))
-            Sender.send_mass_mail.delay(completed_orders)
+            Sender.send_mass_mail.delay(completed_orders_data)
 
     @staticmethod
     def __get_orders(investment: Investment):
@@ -98,13 +106,13 @@ class Sender:
     """Send messages on emails"""
 
     @staticmethod
-    @celery_app.task
-    def send_mass_mail(orders: list[LimitOrder]):
+    @celery_app.task(queue=CELERY_QUEUE)
+    def send_mass_mail(orders: list[dict]):
         with Email() as email:
             email.send_executed_orders(orders)
 
     @staticmethod
-    @celery_app.task
+    @celery_app.task(queue=CELERY_QUEUE)
     def send_mail(recipient: str):
         with Email() as email:
             email.send_welcome_mail(recipient)
@@ -135,11 +143,11 @@ class Email:
         message = self.__get_email_message(welcome_message, recipient)
         self.server.send_message(message)
 
-    def send_executed_orders(self, orders: list[LimitOrder]):
+    def send_executed_orders(self, orders: list[dict]):
         message_template = "Hey! You have bought %s!"
         messages = [
             self.__get_email_message(
-                message_template % order.investment.name, order.portfolio.owner.email
+                message_template % order["investment"], order["recipient"]
             )
             for order in orders
         ]

@@ -47,9 +47,11 @@ services:
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
 
-  celery_app:
+  celery_worker_django_app:
     build: .
-    container_name: celery
+    env_file:
+      - .env
+    container_name: celery_worker_django
     entrypoint:
       - ./entrypoints/celery-worker.sh
     depends_on:
