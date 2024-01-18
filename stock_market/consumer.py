@@ -1,5 +1,4 @@
 import asyncio
-import json
 
 import aiohttp
 from aiokafka import AIOKafkaConsumer
@@ -42,16 +41,14 @@ class Consumer:
 
     async def start(self):
         async for msg in self.consumer:
-            tickers: list[dict] = json.loads(msg.value)
+            await self.__send_message(msg.value)
 
-            await self.__send_message(tickers)
-
-    async def __send_message(self, tickers: list[dict]):
+    async def __send_message(self, data):
         async with aiohttp.ClientSession() as session:
             for _ in range(2):
                 response = await session.put(
                     url=self.kafka_endpoint,
-                    data=tickers,
+                    data=data,
                     headers={
                         "Content-Type": "application/json",
                         "Authorization": f"{HTTP_AUTH_KEYWORD} {self.kafka_auth.access_token}",

@@ -1,9 +1,11 @@
 from decimal import Decimal
 from math import ceil
+from typing import Iterable
 
 from brokers.models import (
     Investment,
     InvestmentPortfolio,
+    InvestmentTypes,
     LimitOrder,
     MarketOrder,
     OrderActivatedStatuses,
@@ -12,7 +14,7 @@ from brokers.models import (
     Trade,
 )
 from django.db import IntegrityError, transaction
-from django.db.models import Count, F
+from django.db.models import Count, F, QuerySet
 from django.http import Http404
 from utils.interfaces import IService
 
@@ -49,10 +51,10 @@ class InvestmentService(IService):
     def get_all(self):
         return Investment.objects.all()
 
-    def bulk_create(self, investments: list[Investment]):
+    def bulk_create(self, investments: Iterable[Investment]):
         return Investment.objects.bulk_create(investments)
 
-    def bulk_update(self, investments: list[Investment], *args):
+    def bulk_update(self, investments: Iterable[Investment], *args):
         return Investment.objects.bulk_update(investments, *args)
 
     def get_percentage(self, old_price: Decimal, new_price: Decimal):
@@ -96,10 +98,10 @@ class InvestmentPortfolioService(IService):
     def get_all(self):
         return InvestmentPortfolio.objects.select_related("owner").all()
 
-    def bulk_create(self, portfolios: list[InvestmentPortfolio]):
+    def bulk_create(self, portfolios: Iterable[InvestmentPortfolio]):
         return InvestmentPortfolio.objects.bulk_create(portfolios)
 
-    def bulk_update(self, portfolios: list[InvestmentPortfolio]):
+    def bulk_update(self, portfolios: Iterable[InvestmentPortfolio]):
         return InvestmentPortfolio.objects.bulk_update(portfolios)
 
     def get_by_filters(self, **filters):
@@ -141,10 +143,10 @@ class OrderService(IService):
     def get_all(self):
         return self.model.objects.select_related("investment", "portfolio__owner").all()
 
-    def bulk_create(self, orders: list[MarketOrder | LimitOrder]):
+    def bulk_create(self, orders: Iterable[MarketOrder | LimitOrder]):
         return self.model.objects.bulk_create(orders)
 
-    def bulk_update(self, orders: list[MarketOrder | LimitOrder], *args):
+    def bulk_update(self, orders: Iterable[MarketOrder | LimitOrder], *args):
         return self.model.objects.bulk_update(orders, *args)
 
     def get_by_filters(self, *args, **filters):
@@ -218,10 +220,10 @@ class TradeService(IService):
     def get_all(self):
         return Trade.objects.select_related("investment", "portfolio__owner").all()
 
-    def bulk_create(self, trades: list[Trade]):
+    def bulk_create(self, trades: Iterable[Trade]):
         return Trade.objects.bulk_create(trades)
 
-    def bulk_update(self, trades: list[Trade]):
+    def bulk_update(self, trades: Iterable[Trade]):
         return Trade.objects.bulk_update(trades)
 
     def get_by_filters(self, **filters):
@@ -258,10 +260,10 @@ class RecommendationService(IService):
     def get_all(self):
         return Recommendation.objects.select_related("investment").all()
 
-    def bulk_create(self, recommendations: list[Recommendation]):
+    def bulk_create(self, recommendations: Iterable[Recommendation]):
         return Recommendation.objects.bulk_create(recommendations)
 
-    def bulk_update(self, recommendations: list[Recommendation], *args):
+    def bulk_update(self, recommendations: Iterable[Recommendation], *args):
         return Recommendation.objects.bulk_update(recommendations, *args)
 
     def get_by_filters(self, **filters):
@@ -359,30 +361,63 @@ class InvestmentUpdateService:
     investment_service = InvestmentService()
     recommendation_service = RecommendationService()
 
-    def update(self, tickers: list[dict]):
+    def update(self, tickers: Iterable[dict]):
         tickers = self.__change_tickers(tickers)
         investments_names = tickers.keys()
 
         recommendations = self.recommendation_service.get_by_filters(
             investment__name__in=investments_names
         )
-        investments = []
+        existed_investments = [
+            recommendation.investment.name for recommendation in recommendations
+        ]
+        create_investments = set(investments_names) - set(existed_investments)
+
+        if create_investments:
+            self.__create(tickers, create_investments)
+        if existed_investments:
+            self.__update(tickers, recommendations)
+
+    def __update(self, tickers: dict, recommendations: QuerySet):
+        updated_investments = []
+
         for recommendation in recommendations:
             investment = recommendation.investment
-            investment.price = tickers[investment.name]["price"]
-            recommendation.percentage = tickers[investment.name]["percentage"]
+            investment.price = tickers[investment.name]["best_bid_price"]
+            recommendation.percentage = tickers[investment.name]["price_change_percent"]
 
-            investments.append(investment)
+            updated_investments.append(investment)
 
-        self.investment_service.bulk_update(investments, ["price"])
+        self.investment_service.bulk_update(updated_investments, ["price"])
         self.recommendation_service.bulk_update(recommendations, ["percentage"])
 
-    def __change_tickers(self, tickers: list[dict]) -> dict:
+    def __create(self, tickers: dict, create_investments: set):
+        created_investments = []
+        created_recommendations = []
+
+        for investment_name in create_investments:
+            new_investment = Investment(
+                name=investment_name,
+                price=tickers[investment_name]["best_bid_price"],
+                type=InvestmentTypes.CRYPTOCURRENCY,
+            )
+            new_recommendation = Recommendation(
+                investment=new_investment,
+                percentage=tickers[investment_name]["price_change_percent"],
+            )
+
+            created_investments.append(new_investment)
+            created_recommendations.append(new_recommendation)
+
+        self.investment_service.bulk_create(created_investments)
+        self.recommendation_service.bulk_create(created_recommendations)
+
+    def __change_tickers(self, tickers: Iterable[dict]) -> dict:
         new_tickers = {}
         for ticker in tickers:
             new_tickers[ticker["symbol"]] = {
-                "price": ticker["price"],
-                "percentage": int(ticker["change_percentage"]),
+                "best_bid_price": Decimal(ticker["best_bid_price"]),
+                "price_change_percent": ticker["price_change_percent"],
             }
 
         return new_tickers

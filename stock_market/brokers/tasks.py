@@ -57,8 +57,9 @@ class LimitOrderTrade:
                     if investment.quantity == 0:
                         break
 
-        order_service.bulk_update(completed_orders, ("status",))
-        Sender.send_mass_mail.delay(completed_orders)
+        if completed_orders:
+            order_service.bulk_update(completed_orders, ("status",))
+            Sender.send_mass_mail.delay(completed_orders)
 
     @staticmethod
     def __get_orders(investment: Investment):

@@ -31,7 +31,7 @@ SECRET_KEY = env.str("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -188,7 +188,7 @@ CONSUMER_GROUP = env.str("CONSUMER_GROUP")
 
 WEB_HOST = env.str("WEB_HOST")
 WEB_PORT = env.int("WEB_PORT")
-WEB_SCHEME = env.int("WEB_SCHEME")
+WEB_SCHEME = env.str("WEB_SCHEME")
 WEB_URL = f"{WEB_SCHEME}://{WEB_HOST}:{WEB_PORT}"
 
 REGISTER_ENDPOINT = env.str("REGISTER_ENDPOINT")

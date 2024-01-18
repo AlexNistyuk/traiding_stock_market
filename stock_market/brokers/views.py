@@ -45,7 +45,7 @@ from users.exceptions import Http400
 from users.models import Roles
 from users.permissions import IsAdmin, IsAnalyst, IsOwner, IsUser
 
-from stock_market.settings import KAFKA_REQUEST_KEY, RECOMMENDATION_THRESHOLD
+from stock_market.settings import RECOMMENDATION_THRESHOLD
 
 
 class InvestmentViewSet(
@@ -439,9 +439,9 @@ class KafkaViewSet(viewsets.GenericViewSet):
 
     @action(methods=["put"], detail=False, url_path="update")
     def update_investments(self, request, *args, **kwargs):
-        tickers = request.data.get(KAFKA_REQUEST_KEY)
+        tickers = request.data
         if not tickers:
-            message = f"Request body does not have data in '{KAFKA_REQUEST_KEY}' key"
+            message = "There is no data"
 
             raise Http400(detail={"detail": message})
 
