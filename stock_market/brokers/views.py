@@ -7,7 +7,7 @@ from brokers.models import (
     Recommendation,
     Trade,
 )
-from brokers.permissions import IsPortfolioOwner
+from brokers.permissions import IsKafkaUser, IsPortfolioOwner
 from brokers.serializers import (
     InvestmentCreateSerializer,
     InvestmentPortfolioCreateSerializer,
@@ -28,6 +28,7 @@ from brokers.serializers import (
     TradeRetrieveSerializer,
     TradeUpdateSerializer,
 )
+from brokers.tasks import MessageBrokerHandler
 from brokers.utils import (
     InvestmentPortfolioService,
     InvestmentService,
@@ -431,3 +432,19 @@ class RecommendationViewSet(
 
     def get_serializer_class(self):
         return self.serializer_action_classes[self.action]
+
+
+class KafkaViewSet(viewsets.GenericViewSet):
+    permission_classes = (IsKafkaUser,)
+
+    @action(methods=["put"], detail=False, url_path="update")
+    def update_investments(self, request, *args, **kwargs):
+        tickers = request.data
+        if not tickers:
+            message = "There is no data"
+
+            raise Http400(detail={"detail": message})
+
+        MessageBrokerHandler.handle.delay(tickers)
+
+        return Response(status=status.HTTP_200_OK)

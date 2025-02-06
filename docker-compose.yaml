@@ -1,14 +1,14 @@
-version: "3.3"
+version: "3.8"
 services:
   django_app:
-    image: stock_market
     build: .
+    container_name: ${WEB_HOST}
     ports:
       - ${WEB_PORT}:${WEB_PORT}
     env_file:
       - .env
     entrypoint:
-      - ./django-entrypoint.sh
+      - ./entrypoints/django.sh
     depends_on:
       - postgres_app
       - redis_app
@@ -32,12 +32,9 @@ services:
       - ${AWS_PORT}:${AWS_PORT}
     environment:
       - SERVICES=s3
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
       - DEBUG=0
     volumes:
-      - ./localstack-entrypoint.sh:/etc/localstack/init/ready.d/localstack-entrypoint.sh
+      - ./entrypoints/localstack.sh:/etc/localstack/init/ready.d/localstack.sh
 
   redis_app:
     image: bitnami/redis:latest
@@ -47,11 +44,48 @@ services:
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
 
-  celery_app:
-    image: stock_market
-    container_name: celery
+  celery_worker_django_app:
+    build: .
+    env_file:
+      - .env
+    container_name: celery_worker_django
     entrypoint:
-      - ./celery-entrypoint.sh
+      - ./entrypoints/celery-worker.sh
     depends_on:
       - redis_app
       - django_app
+
+  zookeeper_app:
+    image: confluentinc/cp-zookeeper:7.2.1
+    container_name: ${ZOOKEEPER_HOST}
+    ports:
+      - ${ZOOKEEPER_CLIENT_PORT}:${ZOOKEEPER_CLIENT_PORT}
+    env_file:
+      - .env
+
+  kafka_app:
+    image: confluentinc/cp-server:7.2.1
+    container_name: ${KAFKA_HOST}
+    depends_on:
+      - zookeeper_app
+    ports:
+      - ${KAFKA_PORT}:${KAFKA_PORT}
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: ${ZOOKEEPER_HOST}:${ZOOKEEPER_CLIENT_PORT}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_HOST}:${KAFKA_PORT}
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_REPLICATION_FACTOR}
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: ${KAFKA_REPLICATION_FACTOR}
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: ${KAFKA_REPLICATION_FACTOR}
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: ${KAFKA_REPLICATION_FACTOR}
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: ${KAFKA_REPLICATION_FACTOR}
+
+  kafka_consumer_app:
+    image: stock_market
+    build: .
+    container_name: kafka-consumer
+    entrypoint:
+      - ./entrypoints/kafka-consumer.sh
+    depends_on:
+      - kafka_app
+      - django_app
+    restart: on-failure

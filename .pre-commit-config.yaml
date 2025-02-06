@@ -14,7 +14,7 @@
         name: flake8
         types: [ python ]
         args:
-        -   --max-line-length=91
+        -   --max-line-length=100
 
 -   repo: https://github.com/pycqa/isort
     rev: 5.12.0
