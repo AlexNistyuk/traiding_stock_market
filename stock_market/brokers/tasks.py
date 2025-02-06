@@ -1,0 +1,164 @@
+import smtplib
+from email.message import EmailMessage
+
+from brokers.models import Investment, OrderActivatedStatuses, OrderStatuses
+from brokers.utils import (
+    InvestmentService,
+    InvestmentUpdateService,
+    LimitOrderService,
+    TradeMaker,
+)
+from django.db import IntegrityError
+from django.db.models import Q
+
+from stock_market import celery_app, settings
+from stock_market.settings import CELERY_QUEUE
+
+
+class MessageBrokerHandler:
+    """Handle messages from message brokers"""
+
+    @staticmethod
+    @celery_app.task(queue=CELERY_QUEUE)
+    def handle(tickers: list[dict]):
+        InvestmentUpdateService().update(tickers)
+        LimitOrderTrade().make_orders()
+
+
+class LimitOrderTrade:
+    """Make executable limit orders"""
+
+    @staticmethod
+    @celery_app.task(queue=CELERY_QUEUE)
+    def make_orders() -> None:
+        order_service = LimitOrderService()
+
+        result = order_service.get_group_by_investment()
+
+        investments = InvestmentService().get_by_filters(
+            id__in=[item["investment"] for item in result], quantity__gt=0
+        )
+
+        trade_maker = TradeMaker()
+        completed_orders = []
+        completed_orders_data = []
+        for investment in investments:
+            orders = LimitOrderTrade.__get_orders(investment)
+
+            for i, order in enumerate(orders):
+                try:
+                    trade_maker.make(order.quantity, order.portfolio, investment)
+                except IntegrityError:
+                    continue
+
+                order.status = OrderStatuses.COMPLETED
+                completed_orders.append(order)
+                completed_orders_data.append(
+                    {
+                        "investment": investment.name,
+                        "recipient": order.portfolio.owner.email,
+                    }
+                )
+
+                if i < len(orders) - 1:
+                    investment.refresh_from_db()
+                    if investment.quantity == 0:
+                        break
+
+        if completed_orders:
+            order_service.bulk_update(completed_orders, ("status",))
+            Sender.send_mass_mail.delay(completed_orders_data)
+
+    @staticmethod
+    def __get_orders(investment: Investment):
+        """Return executable limit orders"""
+        return LimitOrderService().get_by_filters(
+            Q(
+                investment=investment,
+                status=OrderStatuses.ACTIVE,
+                quantity__lte=investment.quantity,
+            )
+            & (
+                Q(
+                    price__gte=investment.price,
+                    activated_status__in=[
+                        OrderActivatedStatuses.LTE,
+                        OrderActivatedStatuses.EQUAL,
+                    ],
+                )
+                | Q(
+                    price__gt=investment.price,
+                    activated_status=OrderActivatedStatuses.LT,
+                )
+                | Q(
+                    price__lte=investment.price,
+                    activated_status=OrderActivatedStatuses.GTE,
+                )
+                | Q(
+                    price__lt=investment.price,
+                    activated_status=OrderActivatedStatuses.GT,
+                )
+            )
+        )
+
+
+class Sender:
+    """Send messages on emails"""
+
+    @staticmethod
+    @celery_app.task(queue=CELERY_QUEUE)
+    def send_mass_mail(orders: list[dict]):
+        with Email() as email:
+            email.send_executed_orders(orders)
+
+    @staticmethod
+    @celery_app.task(queue=CELERY_QUEUE)
+    def send_mail(recipient: str):
+        with Email() as email:
+            email.send_welcome_mail(recipient)
+
+
+class Email:
+    subject = "Trade Platform"
+    sender = settings.EMAIL_HOST_USER
+    password = settings.EMAIL_HOST_PASSWORD
+
+    def __enter__(self):
+        self.server = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        self.server.login(self.sender, self.password)
+
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.server.quit()
+
+    def __get_welcome_message(self):
+        return """
+        Hi! You have been successfully registered!
+        Thank you for choosing our trade platform
+        """
+
+    def send_welcome_mail(self, recipient: str):
+        welcome_message = self.__get_welcome_message()
+        message = self.__get_email_message(welcome_message, recipient)
+        self.server.send_message(message)
+
+    def send_executed_orders(self, orders: list[dict]):
+        message_template = "Hey! You have bought %s!"
+        messages = [
+            self.__get_email_message(
+                message_template % order["investment"], order["recipient"]
+            )
+            for order in orders
+        ]
+
+        [self.server.send_message(message) for message in messages]
+
+    def __get_email_message(self, message: str, recipient: str) -> EmailMessage:
+        email = EmailMessage()
+        email["Subject"] = self.subject
+        email["From"] = self.sender
+        email["To"] = recipient
+        email.set_content(message)
+
+        return email
